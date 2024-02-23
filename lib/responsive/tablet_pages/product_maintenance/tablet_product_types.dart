@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gpos_mobile/database/dabase_helper.dart';
 import '../../../sidebar_menu/sidebar_menu.dart';
 
 class TabletProductTypes extends StatefulWidget {
@@ -11,17 +12,148 @@ class TabletProductTypes extends StatefulWidget {
 class _TabletDashboardState extends State<TabletProductTypes> {
   late GlobalKey<ScaffoldState> _scaffoldKey;
   bool _isDrawerOpen = true;
+  List<Map<String, dynamic>> _productTypes = [];
+  bool _isLoading = true;
 
-  @override
-  void initState() {
-    super.initState();
-    _scaffoldKey = GlobalKey<ScaffoldState>();
+  final TextEditingController _productTypeController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
+
+  void _refreshProductTypes() async {
+    final data = await SQLHelper.getProductTypes();
+    setState(() {
+      _productTypes = data;
+      _isLoading = false;
+    });
   }
 
   void _toggleDrawer() {
     setState(() {
       _isDrawerOpen = !_isDrawerOpen;
     });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _scaffoldKey = GlobalKey<ScaffoldState>();
+    _refreshProductTypes();
+    print("..number of items ${_productTypes.length}");
+  }
+
+  /// * ADD PRODUCT TYPE CLASS **
+  Future<void> _addProductType() async {
+    await SQLHelper.createProductTypes(
+        _productTypeController.text, _descriptionController.text);
+    _refreshProductTypes();
+    print("..number of items ${_productTypes.length}");
+  }
+
+  /// * UPDATE PRODUCT TYPE CLASS **
+  Future<void> _updateProductType(int id) async {
+    await SQLHelper.updateProductType(
+        id, _productTypeController.text, _descriptionController.text);
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      content: Text('Successfully updated product Type'),
+    ));
+    _refreshProductTypes();
+  }
+
+  /// * ADD OR UPDATE PRODUCT TYPE DIALOG CLASS **
+  void addProductTypeDialog(BuildContext context, int? id) async {
+    if (id != null) {
+      final existingProductType =
+          _productTypes.firstWhere((element) => element['id'] == id);
+      _productTypeController.text = existingProductType['product_type'];
+      _descriptionController.text = existingProductType['description'];
+    }
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Add Product Type'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _productTypeController,
+                decoration: const InputDecoration(hintText: 'Product Type'),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: _descriptionController,
+                decoration: const InputDecoration(hintText: 'Description'),
+                maxLines: null,
+                keyboardType: TextInputType.multiline,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                if (id == null) {
+                  await _addProductType();
+                }
+
+                if (id != null) {
+                  await _updateProductType(id);
+                }
+
+                _productTypeController.text = '';
+                _descriptionController.text = '';
+
+                Navigator.of(context).pop();
+              },
+              child: Text(id == null ? 'Submit' : 'Update'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// * DELETE PRODUCT TYPE CLASS **
+  void _deleteProductType(int id) async {
+    await SQLHelper.deleteProductType(id);
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      content: Text('Successfully deleted product Type'),
+    ));
+    _refreshProductTypes();
+  }
+
+  /// * DELETE PRODUCT TYPE DIALOG CLASS **
+  void deleteProductTypeDialog(BuildContext context, int id) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Delete Product Type'),
+          content:
+              const Text('Are you sure you want to delete this Product Type?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                _deleteProductType(id);
+                Navigator.of(context).pop();
+              },
+              child: const Text('Delete'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -56,7 +188,7 @@ class _TabletDashboardState extends State<TabletProductTypes> {
                       Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: AspectRatio(
-                          aspectRatio: 110 / 9,
+                          aspectRatio: 120 / 9,
                           child: Container(
                             color: Colors.deepPurple[200],
                           ),
@@ -70,7 +202,7 @@ class _TabletDashboardState extends State<TabletProductTypes> {
                           GestureDetector(
                             onTap: () {
                               /*** ADD PRODUCT TYPE DIALOG ***/
-                              addProductTypeDialog(context);
+                              addProductTypeDialog(context, null);
                             },
                             child: Container(
                               width: 150,
@@ -96,92 +228,44 @@ class _TabletDashboardState extends State<TabletProductTypes> {
                         ],
                       ),
 
-                      /*** PRODUCT TYPES TABLE ***/
+                      /*** PRODUCT TYPES LIST ***/
                       Expanded(
-                        child: DataTable(
-                          columns: const [
-                            DataColumn(label: Text('Product Type')),
-                            DataColumn(label: Text('Description')),
-                            DataColumn(label: Text('Action')),
-                          ],
-                          rows: [
-                            DataRow(cells: [
-                              const DataCell(Text('Sample Product 1')),
-                              const DataCell(Text('Description 1')),
-                              DataCell(Row(
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.edit),
-                                    onPressed: () {
-                                      /*** EDIT PRODUCT TYPE DIALOG ***/
-                                      editProductTypeDialog(context);
-                                    },
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(
-                                      Icons.delete,
-                                      color: Colors.red,
+                        child: _productTypes.isNotEmpty
+                            ? ListView.builder(
+                                itemCount: _productTypes.length,
+                                itemBuilder: (context, index) => Card(
+                                  color: Colors.white70,
+                                  margin: const EdgeInsets.all(5),
+                                  child: ListTile(
+                                    title: Text(
+                                        _productTypes[index]['product_type']),
+                                    subtitle: Text(
+                                        _productTypes[index]['description']),
+                                    trailing: SizedBox(
+                                      width: 100,
+                                      child: Row(
+                                        children: [
+                                          IconButton(
+                                            onPressed: () =>
+                                                addProductTypeDialog(context,
+                                                    _productTypes[index]['id']),
+                                            icon: const Icon(Icons.edit),
+                                          ),
+                                          IconButton(
+                                            onPressed: () =>
+                                                deleteProductTypeDialog(context,
+                                                    _productTypes[index]['id']),
+                                            icon: const Icon(Icons.delete),
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                    onPressed: () {
-                                      /*** DELETE PRODUCT TYPE DIALOG ***/
-                                      deleteProductTypeDialog(context);
-                                    },
                                   ),
-                                ],
-                              )),
-                            ]),
-                            DataRow(cells: [
-                              const DataCell(Text('Sample Product 2')),
-                              const DataCell(Text('Description 2')),
-                              DataCell(Row(
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.edit),
-                                    onPressed: () {
-                                      /*** EDIT PRODUCT TYPE DIALOG ***/
-                                      editProductTypeDialog(context);
-                                    },
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(
-                                      Icons.delete,
-                                      color: Colors.red,
-                                    ),
-                                    onPressed: () {
-                                      /*** DELETE PRODUCT TYPE DIALOG ***/
-                                      deleteProductTypeDialog(context);
-                                    },
-                                  ),
-                                ],
-                              )),
-                            ]),
-                            DataRow(cells: [
-                              const DataCell(Text('Sample Product 3')),
-                              const DataCell(Text('Description 3')),
-                              DataCell(Row(
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.edit),
-                                    onPressed: () {
-                                      /*** EDIT PRODUCT TYPE DIALOG ***/
-                                      editProductTypeDialog(context);
-                                    },
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(
-                                      Icons.delete,
-                                      color: Colors.red,
-                                    ),
-                                    onPressed: () {
-                                      /*** DELETE PRODUCT TYPE DIALOG ***/
-                                      deleteProductTypeDialog(context);
-                                    },
-                                  ),
-                                ],
-                              )),
-                            ]),
-                          ],
-                        ),
+                                ),
+                              )
+                            : const Center(
+                                child: Text("No product types available."),
+                              ),
                       ),
                     ],
                   ),
@@ -212,115 +296,4 @@ class _TabletDashboardState extends State<TabletProductTypes> {
       ),
     );
   }
-
-  /// * ADD PRODUCT TYPE DIALOG CLASS **
-  void addProductTypeDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Add Product Type'),
-          content: const Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                decoration: InputDecoration(hintText: 'Product Type'),
-              ),
-              SizedBox(height: 10),
-              TextField(
-                decoration: InputDecoration(hintText: 'Description'),
-                maxLines: null,
-                keyboardType: TextInputType.multiline,
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                // Add your submit logic here
-                Navigator.of(context).pop();
-              },
-              child: const Text('Submit'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Cancel'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  /// * EDIT PRODUCT TYPE DIALOG CLASS **
-  void editProductTypeDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Edit Product Type'),
-          content: const Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                decoration: InputDecoration(hintText: 'Product Type'),
-              ),
-              SizedBox(height: 10),
-              TextField(
-                decoration: InputDecoration(hintText: 'Description'),
-                maxLines: null,
-                keyboardType: TextInputType.multiline,
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                // Add your submit logic here
-                Navigator.of(context).pop();
-              },
-              child: const Text('Update'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Cancel'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  /// * DELETE PRODUCT TYPE DIALOG CLASS **
-  void deleteProductTypeDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Delete Product Type'),
-          content: const Text('Are you sure you want to delete this Product Type?'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                // Add your submit logic here
-                Navigator.of(context).pop();
-              },
-              child: const Text('Delete'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Cancel'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
 }
