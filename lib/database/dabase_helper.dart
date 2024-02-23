@@ -19,6 +19,9 @@ class SQLHelper{
     await database.execute("""CREATE TABLE supplier_details(
       id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
       supplier TEXT,
+      supplier_address TEXT,
+      contact_person TEXT,
+      contact_number TEXT,
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
       )""");
     print("...creating a supplier details table");
@@ -47,10 +50,10 @@ class SQLHelper{
   }
 
   /// * Create Supplier Details *
-  static Future<int> createSupplierDetails(String supplier) async {
+  static Future<int> createSupplierDetails(String supplier, String? supplierAddress, String contactPerson, String? contactNumber) async {
     final db = await SQLHelper.db();
 
-    final data = {'supplier': supplier};
+    final data = {'supplier': supplier, 'supplier_address': supplierAddress, 'contact_person': contactPerson, 'contact_number': contactNumber};
     final id = await db.insert('supplier_details', data,
         conflictAlgorithm: sql.ConflictAlgorithm.replace);
     return id;
@@ -95,11 +98,14 @@ class SQLHelper{
   }
 
   /// * Update Supplier Detail *
-  static Future<int> updateSupplierDetail(int id, String supplier) async {
+  static Future<int> updateSupplierDetail(int id, String supplier, String? supplierAddress, String contactPerson, String? contactNumber) async {
     final db = await SQLHelper.db();
 
     final data = {
       'supplier': supplier,
+      'supplier_address': supplierAddress,
+      'contact_person': contactPerson,
+      'contact_number': contactNumber,
       'created_at': DateTime.now().toString()
     };
 
