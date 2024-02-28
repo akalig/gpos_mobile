@@ -1,5 +1,7 @@
+import 'package:path/path.dart' as path;
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart' as sql;
+import 'dart:typed_data';
 
 class SQLHelper {
   /** --------------------------------------------------------------------------------------- **/
@@ -47,7 +49,7 @@ class SQLHelper {
       search_code TEXT,
       markup DOUBLE,
       ordering_level INTEGER,
-      photo BLOB,
+      image BLOB,
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
       )""");
     print("...creating a products table");
@@ -71,10 +73,10 @@ class SQLHelper {
 
   /// * Create Product Types *
   static Future<int> createProductTypes(
-      String product_type, String? description) async {
+      String productType, String? description) async {
     final db = await SQLHelper.db();
 
-    final data = {'product_type': product_type, 'description': description};
+    final data = {'product_type': productType, 'description': description};
     final id = await db.insert('product_types', data,
         conflictAlgorithm: sql.ConflictAlgorithm.replace);
     return id;
@@ -95,11 +97,11 @@ class SQLHelper {
 
   /// * Update Product Type *
   static Future<int> updateProductType(
-      int id, String product_type, String? description) async {
+      int id, String productType, String? description) async {
     final db = await SQLHelper.db();
 
     final data = {
-      'product_type': product_type,
+      'product_type': productType,
       'description': description,
       'created_at': DateTime.now().toString()
     };
@@ -194,6 +196,7 @@ class SQLHelper {
   /** --------------------------------------------------------------------------------------- **/
 
   /// * Create Products *
+  // Your existing method
   static Future<int> createProductsDetails(
       String description,
       String productType,
@@ -206,9 +209,13 @@ class SQLHelper {
       DateTime? expirationDate,
       String searchCode,
       double markup,
-      int orderingLevel) async {
+      int orderingLevel,
+      Uint8List? image) async {
+
+    // Open the database
     final db = await SQLHelper.db();
 
+    // Generate a unique product code
     List<Map<String, dynamic>> products = await getProductsDetails();
     int nextProductCode = 1000001;
 
@@ -218,6 +225,7 @@ class SQLHelper {
       nextProductCode = highestProductCode + 1;
     }
 
+    // Prepare data for insertion
     final data = {
       'product_code': nextProductCode,
       'description': description,
@@ -233,11 +241,15 @@ class SQLHelper {
       'markup': markup,
       'ordering_level': orderingLevel,
       'created_at': DateTime.now().toIso8601String(),
+      'image': image, // Assign the image directly
     };
+
+    // Insert data into the database
     final id = await db.insert('products', data,
         conflictAlgorithm: sql.ConflictAlgorithm.replace);
     return id;
   }
+
 
   /// * Get Products *
   static Future<List<Map<String, dynamic>>> getProductsDetails() async {
@@ -265,7 +277,8 @@ class SQLHelper {
       DateTime? expirationDate,
       String searchCode,
       double markup,
-      int orderingLevel) async {
+      int orderingLevel,
+      Uint8List? image) async {
     final db = await SQLHelper.db();
 
     final data = {
@@ -281,7 +294,8 @@ class SQLHelper {
       'search_code': searchCode,
       'markup': markup,
       'ordering_level': orderingLevel,
-      'created_at': DateTime.now().toString()
+      'created_at': DateTime.now().toString(),
+      'image': image
     };
 
     final result = await db

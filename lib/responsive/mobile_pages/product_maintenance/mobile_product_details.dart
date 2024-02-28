@@ -1,8 +1,9 @@
-import 'dart:ffi';
-
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:gpos_mobile/database/database_helper.dart';
 import '../../../sidebar_menu/sidebar_menu.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class MobileProductDetails extends StatefulWidget {
   const MobileProductDetails({Key? key}) : super(key: key);
@@ -16,6 +17,7 @@ class _MobileProductDetailsState extends State<MobileProductDetails> {
   List<Map<String, dynamic>> _productTypeList = [];
   List<Map<String, dynamic>> _supplierDetailsList = [];
   bool _isLoading = true;
+  XFile? _imageFile;
 
   late TextEditingController _descriptionController;
   String _productTypeValue = '';
@@ -31,6 +33,24 @@ class _MobileProductDetailsState extends State<MobileProductDetails> {
 
   DateTime? _manufacturedDate;
   DateTime? _expirationDate;
+
+  // Method to capture a photo using the device camera
+  Future<void> _capturePhoto() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.camera);
+    setState(() {
+      _imageFile = pickedFile;
+    });
+  }
+
+  // Method to upload a photo from the device gallery
+  Future<void> _uploadPhoto() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    setState(() {
+      _imageFile = pickedFile;
+    });
+  }
 
   Future<void> _selectManufacturedDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -112,6 +132,12 @@ class _MobileProductDetailsState extends State<MobileProductDetails> {
 
   /// * ADD PRODUCTS CLASS **
   Future<void> _addProductsDetails() async {
+    // Convert the image file to bytes
+    Uint8List? imageBytes;
+    if (_imageFile != null) {
+      imageBytes = await _imageFile!.readAsBytes();
+    }
+
     double unitCost = double.parse(_unitCostController.text);
     double sellPrice = double.parse(_sellPriceController.text);
 
@@ -151,13 +177,20 @@ class _MobileProductDetailsState extends State<MobileProductDetails> {
         _expirationDate,
         _searchCodeController.text,
         markup,
-        quantity);
+        quantity,
+        imageBytes);
     _refreshProductsDetails();
     print("..number of items ${_productsDetails.length}");
   }
 
   /// * UPDATE SUPPLIER DETAILS CLASS **
   Future<void> _updateProductsDetails(int id) async {
+    // Convert the image file to bytes
+    Uint8List? imageBytes;
+    if (_imageFile != null) {
+      imageBytes = await _imageFile!.readAsBytes();
+    }
+
     double unitCost = double.parse(_unitCostController.text);
     double sellPrice = double.parse(_sellPriceController.text);
 
@@ -198,7 +231,8 @@ class _MobileProductDetailsState extends State<MobileProductDetails> {
         _expirationDate,
         _searchCodeController.text,
         markup,
-        quantity);
+        quantity,
+        imageBytes);
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
       content: Text('Successfully updated Supplier Detials'),
     ));
@@ -213,13 +247,17 @@ class _MobileProductDetailsState extends State<MobileProductDetails> {
       _descriptionController.text = existingProductDetails['description'];
       // _productTypeValue = existingProductDetails['product_type'].toString();
       _unitCostController.text = existingProductDetails['unit_cost'].toString();
-      _sellPriceController.text = existingProductDetails['sell_price'].toString();
+      _sellPriceController.text =
+          existingProductDetails['sell_price'].toString();
       // _supplierValue = existingProductDetails['supplier'].toString();
       // _isTaxExemptValue = existingProductDetails['is_tax_exempt'].toString();
       // _isDiscountValue = existingProductDetails['is_discount'].toString();
-      _manufacturedDateController.text = existingProductDetails['manufactured_date'].toString();
-      _expirationDateController.text = existingProductDetails['expiration_date'].toString();
-      _searchCodeController.text = existingProductDetails['search_code'].toString();
+      _manufacturedDateController.text =
+          existingProductDetails['manufactured_date'].toString();
+      _expirationDateController.text =
+          existingProductDetails['expiration_date'].toString();
+      _searchCodeController.text =
+          existingProductDetails['search_code'].toString();
       _quantityController.text =
           existingProductDetails['ordering_level'].toString();
     }
@@ -229,182 +267,230 @@ class _MobileProductDetailsState extends State<MobileProductDetails> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Add Product'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: _descriptionController,
-                  decoration: const InputDecoration(hintText: 'Product Name'),
-                ),
-
-                const SizedBox(height: 10),
-
-                // Product Type Dropdown
-                DropdownButtonFormField<String>(
-                  value:
-                      _productTypeValue.isNotEmpty ? _productTypeValue : null,
-                  hint: const Text('Select Product Type'),
-                  items: _productTypeList.map((productType) {
-                    return DropdownMenuItem<String>(
-                      value: productType['id'].toString(),
-                      child: Text(productType['product_type'].toString()),
-                    );
-                  }).toList(),
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      _productTypeValue = newValue ?? '';
-                    });
-                  },
-                ),
-
-                const SizedBox(height: 10),
-
-                TextField(
-                  keyboardType: TextInputType.number,
-                  controller: _unitCostController,
-                  decoration: const InputDecoration(hintText: 'Unit Cost'),
-                  maxLines: null,
-                ),
-
-                const SizedBox(height: 10),
-
-                TextField(
-                  keyboardType: TextInputType.number,
-                  controller: _sellPriceController,
-                  decoration: const InputDecoration(hintText: 'Sell Price'),
-                ),
-
-                const SizedBox(height: 10),
-
-                // Supplier Dropdown
-                DropdownButtonFormField<String>(
-                  value: _supplierValue.isNotEmpty ? _supplierValue : null,
-                  hint: const Text('Select Supplier'),
-                  items: _supplierDetailsList.map((supplier) {
-                    return DropdownMenuItem<String>(
-                      value: supplier['id'].toString(),
-                      child: Text(supplier['supplier'].toString()),
-                    );
-                  }).toList(),
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      _supplierValue = newValue ?? '';
-                    });
-                  },
-                ),
-
-                const SizedBox(height: 10),
-
-                // Is Taxed Dropdown
-                DropdownButtonFormField<String>(
-                  value:
-                      _isTaxExemptValue.isNotEmpty ? _isTaxExemptValue : null,
-                  hint: const Text('Is Tax Exempt?'),
-                  items: const [
-                    DropdownMenuItem<String>(
-                      value: '1',
-                      child: Text('Yes'),
+          content: StatefulBuilder(
+            builder: (BuildContext context, StateSetter setState) {
+              return SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 200, // Adjust the width to your preference
+                      height: 200, // Adjust the height to your preference
+                      child: _imageFile != null
+                          ? Image.file(
+                              File(_imageFile!.path),
+                              fit: BoxFit
+                                  .cover, // Ensure the image fills the container without stretching
+                            )
+                          : Placeholder(), // Placeholder widget if no image is selected
                     ),
-                    DropdownMenuItem<String>(
-                      value: '2',
-                      child: Text('No'),
+
+                    const SizedBox(height: 10),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        IconButton(
+                          onPressed: () async {
+                            await _capturePhoto();
+                            setState(
+                                () {}); // Rebuild the dialog UI after capturing the photo
+                          },
+                          icon: const Icon(Icons.camera_alt),
+                        ),
+                        const SizedBox(width: 10),
+                        IconButton(
+                          onPressed: () async {
+                            await _uploadPhoto();
+                            setState(
+                                () {}); // Rebuild the dialog UI after capturing the photo
+                          },
+                          icon: const Icon(Icons.image),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    TextField(
+                      controller: _descriptionController,
+                      decoration:
+                          const InputDecoration(hintText: 'Product Name'),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    // Product Type Dropdown
+                    DropdownButtonFormField<String>(
+                      value: _productTypeValue.isNotEmpty
+                          ? _productTypeValue
+                          : null,
+                      hint: const Text('Select Product Type'),
+                      items: _productTypeList.map((productType) {
+                        return DropdownMenuItem<String>(
+                          value: productType['id'].toString(),
+                          child: Text(productType['product_type'].toString()),
+                        );
+                      }).toList(),
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          _productTypeValue = newValue ?? '';
+                        });
+                      },
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    TextField(
+                      keyboardType: TextInputType.number,
+                      controller: _unitCostController,
+                      decoration: const InputDecoration(hintText: 'Unit Cost'),
+                      maxLines: null,
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    TextField(
+                      keyboardType: TextInputType.number,
+                      controller: _sellPriceController,
+                      decoration: const InputDecoration(hintText: 'Sell Price'),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    // Supplier Dropdown
+                    DropdownButtonFormField<String>(
+                      value: _supplierValue.isNotEmpty ? _supplierValue : null,
+                      hint: const Text('Select Supplier'),
+                      items: _supplierDetailsList.map((supplier) {
+                        return DropdownMenuItem<String>(
+                          value: supplier['id'].toString(),
+                          child: Text(supplier['supplier'].toString()),
+                        );
+                      }).toList(),
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          _supplierValue = newValue ?? '';
+                        });
+                      },
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    // Is Taxed Dropdown
+                    DropdownButtonFormField<String>(
+                      value: _isTaxExemptValue.isNotEmpty
+                          ? _isTaxExemptValue
+                          : null,
+                      hint: const Text('Is Tax Exempt?'),
+                      items: const [
+                        DropdownMenuItem<String>(
+                          value: '1',
+                          child: Text('Yes'),
+                        ),
+                        DropdownMenuItem<String>(
+                          value: '2',
+                          child: Text('No'),
+                        ),
+                      ],
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          _isTaxExemptValue = newValue ?? '';
+                        });
+                      },
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    // Is Discounted Dropdown
+                    DropdownButtonFormField<String>(
+                      value:
+                          _isDiscountValue.isNotEmpty ? _isDiscountValue : null,
+                      hint: const Text('Is Discounted?'),
+                      items: const [
+                        DropdownMenuItem<String>(
+                          value: '1',
+                          child: Text('Yes'),
+                        ),
+                        DropdownMenuItem<String>(
+                          value: '2',
+                          child: Text('No'),
+                        ),
+                      ],
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          _isDiscountValue = newValue ?? '';
+                        });
+                      },
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    ElevatedButton(
+                      onPressed: () {
+                        _selectManufacturedDate(
+                            context); // Call _selectDate method when the button is pressed
+                      },
+                      style: ElevatedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                      ),
+                      child: TextField(
+                        controller: _manufacturedDateController,
+                        // Assign the TextEditingController to the TextField
+                        enabled: false,
+                        // Disable editing the text field directly
+                        decoration: const InputDecoration(
+                          hintText: 'Select Manufactured Date',
+                          contentPadding: EdgeInsets.zero, // Remove padding
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    ElevatedButton(
+                      onPressed: () {
+                        _selectExpirationDate(
+                            context); // Call _selectDate method when the button is pressed
+                      },
+                      style: ElevatedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                      ),
+                      child: TextField(
+                        controller: _expirationDateController,
+                        // Assign the TextEditingController to the TextField
+                        enabled: false,
+                        // Disable editing the text field directly
+                        decoration: const InputDecoration(
+                          hintText: 'Select Expiration Date',
+                          contentPadding: EdgeInsets.zero, // Remove padding
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    TextField(
+                      controller: _searchCodeController,
+                      decoration:
+                          const InputDecoration(hintText: 'Search Code'),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    TextField(
+                      keyboardType: TextInputType.number,
+                      controller: _quantityController,
+                      decoration: const InputDecoration(hintText: 'Quantity'),
                     ),
                   ],
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      _isTaxExemptValue = newValue ?? '';
-                    });
-                  },
                 ),
-
-                const SizedBox(height: 10),
-
-                // Is Discounted Dropdown
-                DropdownButtonFormField<String>(
-                  value: _isDiscountValue.isNotEmpty ? _isDiscountValue : null,
-                  hint: const Text('Is Discounted?'),
-                  items: const [
-                    DropdownMenuItem<String>(
-                      value: '1',
-                      child: Text('Yes'),
-                    ),
-                    DropdownMenuItem<String>(
-                      value: '2',
-                      child: Text('No'),
-                    ),
-                  ],
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      _isDiscountValue = newValue ?? '';
-                    });
-                  },
-                ),
-
-                const SizedBox(height: 10),
-
-                ElevatedButton(
-                  onPressed: () {
-                    _selectManufacturedDate(
-                        context); // Call _selectDate method when the button is pressed
-                  },
-                  style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(5),
-                    ),
-                  ),
-                  child: TextField(
-                    controller: _manufacturedDateController,
-                    // Assign the TextEditingController to the TextField
-                    enabled: false,
-                    // Disable editing the text field directly
-                    decoration: const InputDecoration(
-                      hintText: 'Select Manufactured Date',
-                      contentPadding: EdgeInsets.zero, // Remove padding
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 10),
-
-                ElevatedButton(
-                  onPressed: () {
-                    _selectExpirationDate(
-                        context); // Call _selectDate method when the button is pressed
-                  },
-                  style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(5),
-                    ),
-                  ),
-                  child: TextField(
-                    controller: _expirationDateController,
-                    // Assign the TextEditingController to the TextField
-                    enabled: false,
-                    // Disable editing the text field directly
-                    decoration: const InputDecoration(
-                      hintText: 'Select Expiration Date',
-                      contentPadding: EdgeInsets.zero, // Remove padding
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 10),
-
-                TextField(
-                  controller: _searchCodeController,
-                  decoration: const InputDecoration(hintText: 'Search Code'),
-                ),
-
-                const SizedBox(height: 10),
-
-                TextField(
-                  keyboardType: TextInputType.number,
-                  controller: _quantityController,
-                  decoration: const InputDecoration(hintText: 'Quantity'),
-                ),
-              ],
-            ),
+              );
+            },
           ),
           actions: [
             TextButton(
@@ -428,6 +514,10 @@ class _MobileProductDetailsState extends State<MobileProductDetails> {
                 _expirationDateController.text = '';
                 _searchCodeController.text = '';
                 _quantityController.text = '';
+
+                setState(() {
+                  _imageFile = null;
+                });
 
                 Navigator.of(context).pop();
               },
@@ -555,9 +645,21 @@ class _MobileProductDetailsState extends State<MobileProductDetails> {
                         color: Colors.white70,
                         margin: const EdgeInsets.all(5),
                         child: ListTile(
-                          title: Text(_productsDetails[index]['description']),
-                          subtitle: Text(_productsDetails[index]['product_code']
-                              .toString()),
+                          leading: Image.memory(
+                            _productsDetails[index]['image'],
+                            // Assuming 'image' contains the Uint8List image data
+                            width: 50, // Adjust as needed
+                            height: 50, // Adjust as needed
+                            fit: BoxFit.cover,
+                          ),
+                          title: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(_productsDetails[index]['description']),
+                              Text(
+                                  'Product Code: ${_productsDetails[index]['product_code']}'),
+                            ],
+                          ),
                           trailing: SizedBox(
                             width: 100,
                             child: Row(
