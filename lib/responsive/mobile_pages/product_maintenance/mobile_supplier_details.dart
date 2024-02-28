@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:gpos_mobile/database/dabase_helper.dart';
+import 'package:gpos_mobile/database/database_helper.dart';
 import '../../../sidebar_menu/sidebar_menu.dart';
 
 class MobileSupplierDetails extends StatefulWidget {
@@ -146,7 +146,7 @@ class _MobileSupplierDetailsState extends State<MobileSupplierDetails> {
   }
 
   /// * DELETE SUPPLIER DETAILS DIALOG CLASS **
-  void deleteProductTypeDialog(BuildContext context, int id) {
+  void deleteSupplierDetailsDialog(BuildContext context, int id) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -219,8 +219,7 @@ class _MobileSupplierDetailsState extends State<MobileSupplierDetails> {
                   child: Container(
                     width: 150,
                     padding: const EdgeInsets.all(5),
-                    margin:
-                    const EdgeInsets.symmetric(horizontal: 10),
+                    margin: const EdgeInsets.symmetric(horizontal: 10),
                     decoration: BoxDecoration(
                       color: Colors.green,
                       borderRadius: BorderRadius.circular(5),
@@ -265,7 +264,7 @@ class _MobileSupplierDetailsState extends State<MobileSupplierDetails> {
                           ),
                           IconButton(
                             onPressed: () =>
-                                deleteProductTypeDialog(context,
+                                deleteSupplierDetailsDialog(context,
                                     _supplierDetails[index]['id']),
                             icon: const Icon(Icons.delete),
                           ),

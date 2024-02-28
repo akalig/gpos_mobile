@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:gpos_mobile/database/dabase_helper.dart';
+import 'package:gpos_mobile/database/database_helper.dart';
 import '../../../sidebar_menu/sidebar_menu.dart';
 
 class TabletProductTypes extends StatefulWidget {
