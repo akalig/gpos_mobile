@@ -234,7 +234,7 @@ class _MobileProductDetailsState extends State<MobileProductDetails> {
         quantity,
         imageBytes);
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-      content: Text('Successfully updated Supplier Detials'),
+      content: Text('Successfully updated Supplier Details'),
     ));
     _refreshProductsDetails();
   }
@@ -636,7 +636,7 @@ class _MobileProductDetailsState extends State<MobileProductDetails> {
               ],
             ),
 
-            /*** SUPPLIER DETAILS LIST ***/
+            /*** PRODUCT DETAILS LIST ***/
             Expanded(
               child: _productsDetails.isNotEmpty
                   ? ListView.builder(
