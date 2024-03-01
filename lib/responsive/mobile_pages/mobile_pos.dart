@@ -64,41 +64,72 @@ class _MobilePOSState extends State<MobilePOS> {
             // comment section & recommended videos
             /*** PRODUCT DETAILS LIST ***/
             Expanded(
-              child: _productsDetails.isNotEmpty
-                  ? ListView.builder(
-                itemCount: _productsDetails.length,
-                itemBuilder: (context, index) => Card(
-                  color: Colors.white70,
-                  margin: const EdgeInsets.all(5),
-                  child: ListTile(
-                    leading: Image.memory(
-                      _productsDetails[index]['image'],
-                      // Assuming 'image' contains the Uint8List image data
-                      width: 50, // Adjust as needed
-                      height: 50, // Adjust as needed
-                      fit: BoxFit.cover,
-                    ),
-                    title: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(_productsDetails[index]['description']),
-                        Text(
-                            'Product Code: ${_productsDetails[index]['product_code']}'),
-                      ],
-                    ),
-                    trailing: SizedBox(
-                      width: 100,
-                      child: Row(
+              child: GridView.builder(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 8.0,
+                  mainAxisSpacing: 8.0,
+                ),
+                itemCount: _productsDetails.length, // Assuming _productsDetails contains your data
+                itemBuilder: (context, index) {
+                  return Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Container(
+                      color: Colors.deepPurple[300],
+                      height: 80,
+                      width: 80,
+                      child: Stack(
                         children: [
-                          Text('Price: ₱${_productsDetails[index]['sell_price'].toString()}'),
+                          Image.memory(
+                            _productsDetails[index]['image'],
+                            // Assuming 'image' contains the Uint8List image data
+                            fit: BoxFit.cover,
+                            height: double.infinity,
+                            width: double.infinity,
+                          ),
+                          Container(
+                            color: Colors.black.withOpacity(0.5),
+                            height: double.infinity,
+                            width: double.infinity,
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+
+                              Padding(
+                                padding: const EdgeInsets.only(left: 8.0),
+                                child: Text(
+                                  _productsDetails[index]['description'], // Assuming 'description' is a key in your data
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14.0,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+
+                              const SizedBox(height: 1),
+
+                              Padding(
+                                padding: const EdgeInsets.only(left: 8.0),
+                                child: Text(
+                                  'Price: ₱${_productsDetails[index]['sell_price'].toString()}', // Assuming 'sell_price' is a key in your data
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12.0,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 3),
+                            ],
+                          ),
+
                         ],
                       ),
                     ),
-                  ),
-                ),
-              )
-                  : const Center(
-                child: Text("No supplier available."),
+                  );
+                },
               ),
             ),
           ],

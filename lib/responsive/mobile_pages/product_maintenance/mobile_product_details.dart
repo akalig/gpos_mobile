@@ -179,6 +179,8 @@ class _MobileProductDetailsState extends State<MobileProductDetails> {
         markup,
         quantity,
         imageBytes);
+
+    await Future.delayed(const Duration(seconds: 5));
     _refreshProductsDetails();
     print("..number of items ${_productsDetails.length}");
   }
@@ -236,6 +238,8 @@ class _MobileProductDetailsState extends State<MobileProductDetails> {
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
       content: Text('Successfully updated Supplier Details'),
     ));
+
+    await Future.delayed(const Duration(seconds: 5));
     _refreshProductsDetails();
   }
 
@@ -514,10 +518,6 @@ class _MobileProductDetailsState extends State<MobileProductDetails> {
                 _expirationDateController.text = '';
                 _searchCodeController.text = '';
                 _quantityController.text = '';
-
-                setState(() {
-                  _imageFile = null;
-                });
 
                 Navigator.of(context).pop();
               },
