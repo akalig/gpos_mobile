@@ -72,60 +72,62 @@ class _MobilePOSState extends State<MobilePOS> {
                 ),
                 itemCount: _productsDetails.length, // Assuming _productsDetails contains your data
                 itemBuilder: (context, index) {
-                  return Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Container(
-                      color: Colors.deepPurple[300],
-                      height: 80,
-                      width: 80,
-                      child: Stack(
-                        children: [
-                          Image.memory(
-                            _productsDetails[index]['image'],
-                            // Assuming 'image' contains the Uint8List image data
-                            fit: BoxFit.cover,
-                            height: double.infinity,
-                            width: double.infinity,
-                          ),
-                          Container(
-                            color: Colors.black.withOpacity(0.5),
-                            height: double.infinity,
-                            width: double.infinity,
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-
-                              Padding(
-                                padding: const EdgeInsets.only(left: 8.0),
-                                child: Text(
-                                  _productsDetails[index]['description'], // Assuming 'description' is a key in your data
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 14.0,
-                                    fontWeight: FontWeight.bold,
+                  return GestureDetector(
+                    onTap: () {
+                      // Handle the tap event, for example, navigate to a new page or show a dialog
+                      // Here you can use _productsDetails[index] to get the data for the tapped item
+                      // Example: Navigator.push(context, MaterialPageRoute(builder: (context) => ProductDetailsPage(product: _productsDetails[index])));
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Container(
+                        color: Colors.deepPurple[300],
+                        height: 80,
+                        width: 80,
+                        child: Stack(
+                          children: [
+                            Image.memory(
+                              _productsDetails[index]['image'] ?? Uint8List(0), // Null check with a default empty Uint8List
+                              fit: BoxFit.cover,
+                              height: double.infinity,
+                              width: double.infinity,
+                            ),
+                            Container(
+                              color: Colors.black.withOpacity(0.5),
+                              height: double.infinity,
+                              width: double.infinity,
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 8.0),
+                                  child: Text(
+                                    _productsDetails[index]['description'], // Assuming 'description' is a key in your data
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14.0,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ),
-                              ),
-
-                              const SizedBox(height: 1),
-
-                              Padding(
-                                padding: const EdgeInsets.only(left: 8.0),
-                                child: Text(
-                                  'Price: ₱${_productsDetails[index]['sell_price'].toString()}', // Assuming 'sell_price' is a key in your data
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12.0,
+                                const SizedBox(height: 1),
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 8.0),
+                                  child: Text(
+                                    'Price: ₱${_productsDetails[index]['sell_price'].toString()}', // Assuming 'sell_price' is a key in your data
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12.0,
+                                    ),
                                   ),
                                 ),
-                              ),
-                              const SizedBox(height: 3),
-                            ],
-                          ),
-
-                        ],
+                                const SizedBox(height: 3),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   );

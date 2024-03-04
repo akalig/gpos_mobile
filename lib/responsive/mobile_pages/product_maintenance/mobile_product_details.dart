@@ -180,7 +180,6 @@ class _MobileProductDetailsState extends State<MobileProductDetails> {
         quantity,
         imageBytes);
 
-    await Future.delayed(const Duration(seconds: 5));
     _refreshProductsDetails();
     print("..number of items ${_productsDetails.length}");
   }
@@ -239,7 +238,6 @@ class _MobileProductDetailsState extends State<MobileProductDetails> {
       content: Text('Successfully updated Supplier Details'),
     ));
 
-    await Future.delayed(const Duration(seconds: 5));
     _refreshProductsDetails();
   }
 
@@ -518,6 +516,7 @@ class _MobileProductDetailsState extends State<MobileProductDetails> {
                 _expirationDateController.text = '';
                 _searchCodeController.text = '';
                 _quantityController.text = '';
+                _imageFile = null;
 
                 Navigator.of(context).pop();
               },
@@ -646,7 +645,7 @@ class _MobileProductDetailsState extends State<MobileProductDetails> {
                         margin: const EdgeInsets.all(5),
                         child: ListTile(
                           leading: Image.memory(
-                            _productsDetails[index]['image'],
+                            _productsDetails[index]['image'] ?? Uint8List(0),
                             // Assuming 'image' contains the Uint8List image data
                             width: 50, // Adjust as needed
                             height: 50, // Adjust as needed

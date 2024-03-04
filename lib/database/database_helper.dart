@@ -55,6 +55,19 @@ class SQLHelper {
     print("...creating a products table");
   }
 
+  /// * Create On Transaction Table *
+  // static Future<void> createOnTransactionTable(sql.Database database) async {
+  //   await database.execute("""CREATE TABLE products(
+  //     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+  //     product_code INTEGER,
+  //     description TEXT,
+  //     sell_price DOUBLE,
+  //     ordering_level INTEGER,
+  //     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  //     )""");
+  //   print("...creating a products table");
+  // }
+
   static Future<sql.Database> db() async {
     return sql.openDatabase(
       'gposmobile.db',
@@ -196,7 +209,6 @@ class SQLHelper {
   /** --------------------------------------------------------------------------------------- **/
 
   /// * Create Products *
-  // Your existing method
   static Future<int> createProductsDetails(
       String description,
       String productType,
@@ -214,6 +226,18 @@ class SQLHelper {
 
     // Open the database
     final db = await SQLHelper.db();
+
+    // Check if the image data already exists in the database
+    List<Map<String, dynamic>> existingImages = await db.query('products',
+        columns: ['image'], // Select only the image column
+        where: 'image = ?', // Check if the image data matches
+        whereArgs: [image]);
+
+    if (existingImages.isNotEmpty) {
+      // Image data already exists, handle the case accordingly
+      // For example, throw an error or return an existing product ID
+      throw Exception('Image data already exists in the database.');
+    }
 
     // Generate a unique product code
     List<Map<String, dynamic>> products = await getProductsDetails();
@@ -247,8 +271,12 @@ class SQLHelper {
     // Insert data into the database
     final id = await db.insert('products', data,
         conflictAlgorithm: sql.ConflictAlgorithm.replace);
+
+    print("Image blob: ${image.toString()}");
+
     return id;
   }
+
 
 
   /// * Get Products *
