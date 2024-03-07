@@ -275,7 +275,7 @@ class _MobileProductDetailsState extends State<MobileProductDetails> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Container(
+                    SizedBox(
                       width: 200, // Adjust the width to your preference
                       height: 200, // Adjust the height to your preference
                       child: _imageFile != null
@@ -284,7 +284,7 @@ class _MobileProductDetailsState extends State<MobileProductDetails> {
                               fit: BoxFit
                                   .cover, // Ensure the image fills the container without stretching
                             )
-                          : Placeholder(), // Placeholder widget if no image is selected
+                          : const Placeholder(), // Placeholder widget if no image is selected
                     ),
 
                     const SizedBox(height: 10),
@@ -644,13 +644,15 @@ class _MobileProductDetailsState extends State<MobileProductDetails> {
                         color: Colors.white70,
                         margin: const EdgeInsets.all(5),
                         child: ListTile(
-                          leading: Image.memory(
-                            _productsDetails[index]['image'] ?? Uint8List(0),
-                            // Assuming 'image' contains the Uint8List image data
+                          leading: _productsDetails.isNotEmpty &&
+                              _productsDetails[0]['image'] != null &&
+                              (_productsDetails[0]['image'] as Uint8List).isNotEmpty
+                              ? Image.memory(
+                            _productsDetails[0]['image'], // Assuming 'image' contains the Uint8List image data
                             width: 50, // Adjust as needed
                             height: 50, // Adjust as needed
                             fit: BoxFit.cover,
-                          ),
+                          ) : null,
                           title: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [

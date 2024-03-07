@@ -1,7 +1,5 @@
-import 'package:path/path.dart' as path;
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart' as sql;
-import 'dart:typed_data';
 
 class SQLHelper {
   /** --------------------------------------------------------------------------------------- **/
@@ -56,17 +54,20 @@ class SQLHelper {
   }
 
   /// * Create On Transaction Table *
-  // static Future<void> createOnTransactionTable(sql.Database database) async {
-  //   await database.execute("""CREATE TABLE products(
-  //     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-  //     product_code INTEGER,
-  //     description TEXT,
-  //     sell_price DOUBLE,
-  //     ordering_level INTEGER,
-  //     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-  //     )""");
-  //   print("...creating a products table");
-  // }
+  static Future<void> createOnTransactionTable(sql.Database database) async {
+    await database.execute("""CREATE TABLE on_transaction(
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      product_code INTEGER,
+      description TEXT,
+      sell_price DOUBLE,
+      discount DOUBLE,
+      ordering_level INTEGER,
+      total DOUBLE,
+      subtotal DOUBLE,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )""");
+    print("...creating a On Transaction table");
+  }
 
   static Future<sql.Database> db() async {
     return sql.openDatabase(
@@ -76,6 +77,7 @@ class SQLHelper {
         await createProductTypesTable(database);
         await createSupplierDetailsTable(database);
         await createProductsTable(database);
+        await createOnTransactionTable(database);
       },
     );
   }
@@ -223,21 +225,8 @@ class SQLHelper {
       double markup,
       int orderingLevel,
       Uint8List? image) async {
-
     // Open the database
     final db = await SQLHelper.db();
-
-    // Check if the image data already exists in the database
-    List<Map<String, dynamic>> existingImages = await db.query('products',
-        columns: ['image'], // Select only the image column
-        where: 'image = ?', // Check if the image data matches
-        whereArgs: [image]);
-
-    if (existingImages.isNotEmpty) {
-      // Image data already exists, handle the case accordingly
-      // For example, throw an error or return an existing product ID
-      throw Exception('Image data already exists in the database.');
-    }
 
     // Generate a unique product code
     List<Map<String, dynamic>> products = await getProductsDetails();
@@ -276,8 +265,6 @@ class SQLHelper {
 
     return id;
   }
-
-
 
   /// * Get Products *
   static Future<List<Map<String, dynamic>>> getProductsDetails() async {
@@ -326,8 +313,8 @@ class SQLHelper {
       'image': image
     };
 
-    final result = await db
-        .update('products', data, where: "id = ?", whereArgs: [id]);
+    final result =
+        await db.update('products', data, where: "id = ?", whereArgs: [id]);
     return result;
   }
 
@@ -341,4 +328,92 @@ class SQLHelper {
       debugPrint("Something went wrong when deleting the product: $err");
     }
   }
+
+  /** --------------------------------------------------------------------------------------- **/
+  /** -------------------------------ON TRANSACTION QUERIES---------------------------------- **/
+  /** --------------------------------------------------------------------------------------- **/
+
+  /// * Create On Transaction *
+  static Future<int> createOnTransaction(int productCode, String description,
+      double sellPrice, double discount) async {
+    final db = await SQLHelper.db();
+    int insertedId;
+    int quantity = 1;
+
+    List<Map<String, dynamic>> onTransaction = await db.query('on_transaction',
+        where: 'product_code = ?', whereArgs: [productCode]);
+
+    if (onTransaction.isNotEmpty) {
+      int onTransactionQuantity = onTransaction.first['ordering_level'];
+      quantity = onTransactionQuantity + 1;
+
+      double updatedPrice = sellPrice * quantity;
+
+      // Prepare data for update
+      final data = {
+        'ordering_level': quantity,
+        'subtotal': updatedPrice,
+        'total': updatedPrice,
+      };
+
+      insertedId = await db.update(
+        'on_transaction',
+        data,
+        where: 'product_code = ?',
+        whereArgs: [productCode],
+        conflictAlgorithm: sql.ConflictAlgorithm.replace,
+      );
+    } else {
+      // Prepare data for insertion
+      final data = {
+        'product_code': productCode,
+        'description': description,
+        'sell_price': sellPrice,
+        'discount': discount,
+        'ordering_level': quantity,
+        'subtotal': sellPrice,
+        'total': sellPrice,
+      };
+
+      insertedId = await db.insert('on_transaction', data,
+          conflictAlgorithm: sql.ConflictAlgorithm.replace);
+    }
+
+    return insertedId;
+  }
+
+  /// * Get On Transaction *
+  static Future<List<Map<String, dynamic>>> getOnTransaction() async {
+    final db = await SQLHelper.db();
+    return db.query('on_transaction', orderBy: "id DESC");
+  }
+
+  /// * Update discount *
+  static Future<int> updateDiscount(int productCode, double discount) async {
+    final db = await SQLHelper.db();
+
+    List<Map<String, dynamic>> onTransaction = await db.query('on_transaction',
+        where: 'product_code = ?', whereArgs: [productCode]);
+
+    if (onTransaction.isNotEmpty) {
+      double total = onTransaction.first['subtotal'];
+
+      // Compute the discounted value
+      double discountedValue = total * (discount / 100);
+
+      double updatedTotal = total - discountedValue;
+
+      final data = {
+        'discount': discountedValue,
+        'total': updatedTotal,
+      };
+
+      final result =
+      await db.update('on_transaction', data, where: "product_code = ?", whereArgs: [productCode]);
+      return result;
+    }
+
+    return 0; // Return 0 if no transaction found
+  }
+
 }
