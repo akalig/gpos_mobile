@@ -193,8 +193,8 @@ class _MobilePOSState extends State<MobilePOS> {
                                         DataColumn(label: Text('Description')),
                                         DataColumn(label: Text('Price')),
                                         DataColumn(label: Text('Quantity')),
-                                        DataColumn(label: Text('Discount')),
                                         DataColumn(label: Text('Subtotal')),
+                                        DataColumn(label: Text('Discount')),
                                         DataColumn(label: Text('Total')),
                                       ],
                                       rows: _onTransaction.map((transaction) {
@@ -202,6 +202,7 @@ class _MobilePOSState extends State<MobilePOS> {
                                           DataCell(Text(transaction['description'])),
                                           DataCell(Text(transaction['sell_price'].toString())),
                                           DataCell(Text(transaction['ordering_level'].toString())),
+                                          DataCell(Text(transaction['subtotal'].toString())),
                                           DataCell(GestureDetector(
                                             onTap: () {
                                               showDialog(
@@ -249,7 +250,6 @@ class _MobilePOSState extends State<MobilePOS> {
                                             },
                                             child: Text(transaction['discount'].toString()),
                                           )),
-                                          DataCell(Text(transaction['subtotal'].toString())),
                                           DataCell(Text(transaction['total'].toString())),
                                         ]);
                                       }).toList(),
@@ -262,9 +262,9 @@ class _MobilePOSState extends State<MobilePOS> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text('Total Discount: ${calculateTotalDiscount()}'),
-                                    const SizedBox(height: 5),
                                     Text('Subtotal: ${calculateSubtotal()}'),
+                                    const SizedBox(height: 5),
+                                    Text('Total Discount: ${calculateTotalDiscount()}'),
                                     const SizedBox(height: 5),
                                     Text('Total: ${calculateTotal()}'),
                                   ],

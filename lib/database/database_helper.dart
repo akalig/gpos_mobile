@@ -408,12 +408,17 @@ class SQLHelper {
         'total': updatedTotal,
       };
 
-      final result =
-      await db.update('on_transaction', data, where: "product_code = ?", whereArgs: [productCode]);
+      final result = await db.update('on_transaction', data,
+          where: "product_code = ?", whereArgs: [productCode]);
       return result;
     }
 
     return 0; // Return 0 if no transaction found
   }
 
+  /// * Truncate On Transaction Table *
+  static Future<void> truncateOnTransactionTable() async {
+    final db = await SQLHelper.db();
+    await db.delete('on_transaction');
+  }
 }
