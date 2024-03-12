@@ -69,6 +69,39 @@ class SQLHelper {
     print("...creating a On Transaction table");
   }
 
+  /// * Create Sales Details Table *
+  static Future<void> createSalesDetailsTable(sql.Database database) async {
+    await database.execute("""CREATE TABLE sales_details(
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      transaction_code INTEGER,
+      product_code INTEGER,
+      description TEXT,
+      sell_price DOUBLE,
+      discount DOUBLE,
+      ordering_level INTEGER,
+      total DOUBLE,
+      subtotal DOUBLE,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )""");
+    print("...creating a sales details table");
+  }
+
+  /// * Create Sales Headers Table *
+  static Future<void> createSalesHeadersTable(sql.Database database) async {
+    await database.execute("""CREATE TABLE sales_headers(
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      transaction_code INTEGER,
+      subtotal DOUBLE,
+      total_discount DOUBLE,
+      total DOUBLE,
+      amount_paid DOUBLE,
+      change DOUBLE,
+      status TEXT,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )""");
+    print("...creating a Sales headers table");
+  }
+
   static Future<sql.Database> db() async {
     return sql.openDatabase(
       'gposmobile.db',
@@ -78,6 +111,8 @@ class SQLHelper {
         await createSupplierDetailsTable(database);
         await createProductsTable(database);
         await createOnTransactionTable(database);
+        await createSalesDetailsTable(database);
+        await createSalesHeadersTable(database);
       },
     );
   }
@@ -416,9 +451,108 @@ class SQLHelper {
     return 0; // Return 0 if no transaction found
   }
 
-  /// * Truncate On Transaction Table *
-  static Future<void> truncateOnTransactionTable() async {
+  /// * Truncate On Transaction *
+  static Future<void> truncateOnTransaction() async {
     final db = await SQLHelper.db();
     await db.delete('on_transaction');
+  }
+
+  /** --------------------------------------------------------------------------------------- **/
+  /** -------------------------------SALES HEADERS QUERIES----------------------------------- **/
+  /** --------------------------------------------------------------------------------------- **/
+
+  /// * Create Sales Headers *
+  static Future<void> createSalesHeaders(double subtotal, double totalDiscount, double total, String stAmountPaid) async {
+    final db = await SQLHelper.db();
+
+    double amountPaid = double.parse(stAmountPaid);
+
+    double change = amountPaid - total;
+
+    // Get the next available transaction_code for sales_details
+    List<Map<String, dynamic>> salesHeaders = await getSalesCount();
+    int nextTransactionCode = 1000001;
+
+    if (salesHeaders.isNotEmpty) {
+      // Find the highest existing transaction_code
+      int highestTransactionCode = salesHeaders.first['transaction_code'];
+      nextTransactionCode = highestTransactionCode + 1;
+    }
+
+    final data = {
+      'transaction_code': nextTransactionCode,
+      'subtotal': subtotal,
+      'total_discount': totalDiscount,
+      'total': total,
+      'amount_paid': amountPaid,
+      'change': change,
+      'status': 'done'
+    };
+
+    await db.insert('sales_headers', data, conflictAlgorithm: sql.ConflictAlgorithm.replace);
+  }
+
+  /// * Get Sales Headers Count *
+  static Future<List<Map<String, dynamic>>> getSalesCount() async {
+    final db = await SQLHelper.db();
+    return db.query('sales_headers', orderBy: "id DESC");
+  }
+
+  /// * Get Sales Headers *
+  static Future<List<Map<String, dynamic>>> getSalesHeaders() async {
+    final db = await SQLHelper.db();
+    return db.query('sales_headers', orderBy: "id");
+  }
+
+/** --------------------------------------------------------------------------------------- **/
+/** -------------------------------SALES DETAILS QUERIES----------------------------------- **/
+/** --------------------------------------------------------------------------------------- **/
+
+  /// * Create Sales Details *
+  static Future<void> createSalesDetails() async {
+    final db = await SQLHelper.db();
+
+    // Get all data from on_transaction table
+    List<Map<String, dynamic>> onTransactionData = await db.query('on_transaction');
+
+    // Get the next available transaction_code for sales_details
+    List<Map<String, dynamic>> salesDetails = await getSalesDetailsCount();
+    int nextTransactionCode = 1000001;
+
+    if (salesDetails.isNotEmpty) {
+      // Find the highest existing transaction_code
+      int highestTransactionCode = salesDetails.first['transaction_code'];
+      nextTransactionCode = highestTransactionCode + 1;
+    }
+
+    // Loop through each row in on_transaction table
+    for (Map<String, dynamic> transaction in onTransactionData) {
+      // Prepare data for insertion into sales_details table
+      final data = {
+        'transaction_code': nextTransactionCode,
+        'product_code': transaction['product_code'],
+        'description': transaction['description'],
+        'sell_price': transaction['sell_price'],
+        'discount': transaction['discount'],
+        'ordering_level': transaction['ordering_level'],
+        'subtotal': transaction['subtotal'],
+        'total': transaction['total'],
+      };
+
+      // Insert data into sales_details table
+      await db.insert('sales_details', data);
+    }
+  }
+
+  /// * Get Sales Details Count *
+  static Future<List<Map<String, dynamic>>> getSalesDetailsCount() async {
+    final db = await SQLHelper.db();
+    return db.query('sales_details', orderBy: "id DESC");
+  }
+
+  /// * Get Sales Details *
+  static Future<List<Map<String, dynamic>>> getSalesDetails() async {
+    final db = await SQLHelper.db();
+    return db.query('sales_details', orderBy: "id");
   }
 }

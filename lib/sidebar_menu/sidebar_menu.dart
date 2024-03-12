@@ -3,6 +3,7 @@ import 'package:gpos_mobile/pages/dashboard_main.dart';
 import 'package:gpos_mobile/pages/pos_main.dart';
 import 'package:gpos_mobile/pages/product_maintenance/product_details_main.dart';
 import 'package:gpos_mobile/pages/product_maintenance/product_types_main.dart';
+import 'package:gpos_mobile/pages/sales_report/daily_sales.dart';
 
 import '../pages/product_maintenance/supplier_details_main.dart';
 
@@ -109,34 +110,18 @@ class SidebarMenu extends StatelessWidget {
               ListTile(
                 title: const Text('Daily Sales'),
                 onTap: () {
-                  // Handle daily sales tap
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                        const DailySalesMain()), // Replace with your actual Home widget
+                  );
                 },
               ),
               ListTile(
                 title: const Text('Sales History'),
                 onTap: () {
                   // Handle sales history tap
-                },
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          ExpansionTile(
-            title: const Text(
-              'Discount Maintenance',
-              style: TextStyle(fontSize: 14, letterSpacing: 2),
-            ),
-            children: [
-              ListTile(
-                title: const Text('Senior Discount'),
-                onTap: () {
-                  // Handle senior discount tap
-                },
-              ),
-              ListTile(
-                title: const Text('PWD Discount'),
-                onTap: () {
-                  // Handle pwd discount tap
                 },
               ),
             ],
