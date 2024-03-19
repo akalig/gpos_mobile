@@ -113,23 +113,43 @@ class _CheckoutReceiptState extends State<CheckoutReceipt> {
         ),
       );
 
-      // Fetch transaction data from the database
-      final transactions = await SQLHelper.getOnTransaction();
+      list.add(
+        LineText(
+          type: LineText.TYPE_TEXT,
+          content: "Sample 1",
+          weight: 0,
+          align: LineText.ALIGN_LEFT,
+          linefeed: 1,
+        ),
+      );
 
-      // Iterate over the transactions list
-      for (var i = 0; i < transactions.length; i++) {
-        var transaction = transactions[i];
+      list.add(
+        LineText(
+          type: LineText.TYPE_TEXT,
+          content: "Sample 2",
+          weight: 0,
+          align: LineText.ALIGN_LEFT,
+          linefeed: 1,
+        ),
+      );
 
-        list.add(
-          LineText(
-            type: LineText.TYPE_TEXT,
-            content: "${transaction['description']} | ${transaction['ordering_level']} | ${transaction['total']}",
-            weight: 0,
-            align: LineText.ALIGN_LEFT,
-            linefeed: 1,
-          ),
-        );
-      }
+      // // Fetch transaction data from the database
+      // final transactions = await SQLHelper.getOnTransaction();
+      //
+      // // Iterate over the transactions list
+      // for (var i = 0; i < transactions.length; i++) {
+      //   var transaction = transactions[i];
+      //
+      //   list.add(
+      //     LineText(
+      //       type: LineText.TYPE_TEXT,
+      //       content: "${transaction['description']} | ${transaction['ordering_level']} | ${transaction['total']}",
+      //       weight: 0,
+      //       align: LineText.ALIGN_LEFT,
+      //       linefeed: 1,
+      //     ),
+      //   );
+      // }
 
       // After iterating over transactions, proceed with printing
       // You can now use the `list` variable containing the content to be printed
