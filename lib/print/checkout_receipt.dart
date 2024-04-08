@@ -83,8 +83,8 @@ class _CheckoutReceiptState extends State<CheckoutReceipt> {
         itemBuilder: (c, i) {
           return ListTile(
             leading: const Icon(Icons.print),
-            title: const Text('Print Receipt'),
-            subtitle: Text(_devices[i].name.toString()),
+            title: Text(_devices[i].name.toString()),
+            subtitle: Text(_devices[i].address.toString()),
             onTap: () {
               _startPrint(_devices[i]);
             },
