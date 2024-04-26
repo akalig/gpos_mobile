@@ -50,6 +50,7 @@ class _MobilePOSCheckoutState extends State<MobilePOSCheckout> {
   /// * ADD SALES HEADERS CLASS **
   Future<void> _addSalesHeaders(double subtotal, double totalDiscount,
       double total, String amountPaid) async {
+
     await SQLHelper.createSalesHeaders(
         subtotal, totalDiscount, total, amountPaid);
   }
@@ -197,70 +198,70 @@ class _MobilePOSCheckoutState extends State<MobilePOSCheckout> {
                         TextButton(
                           onPressed: () {
 
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const CheckoutReceipt(),
-                              ),
-                            );
+                            // Navigator.push(
+                            //   context,
+                            //   MaterialPageRoute(
+                            //     builder: (_) => const CheckoutReceipt(),
+                            //   ),
+                            // );
 
                             // Parse the amount paid to a double
-                            // double amountPaid =
-                            //     double.tryParse(_amountPaidController.text) ??
-                            //         0.0;
-                            //
-                            // // Calculate the total
-                            // double total = calculateTotal();
-                            //
-                            // // Check if amount paid is sufficient
-                            // if (amountPaid >= total) {
-                            //   // Proceed with submitting the sales details
-                            //   _addSalesDetails();
-                            //
-                            //   // Add a delay if needed
-                            //   Future.delayed(const Duration(seconds: 2));
-                            //
-                            //   // Add sales headers
-                            //   _addSalesHeaders(
-                            //       calculateSubtotal(),
-                            //       calculateTotalDiscount(),
-                            //       total,
-                            //       amountPaid.toString());
-                            //
-                            //   // Add a delay if needed
-                            //   Future.delayed(const Duration(seconds: 2));
-                            //
-                            //   // Truncate on_transaction table
-                            //   _truncateOnTransaction();
-                            //
-                            //   // Navigator.pushReplacement(
-                            //   //   context,
-                            //   //   MaterialPageRoute(
-                            //   //       builder: (context) =>
-                            //   //           const POSMain()), // Replace with your actual Home widget
-                            //   // );
-                            //
-                            // } else {
-                            //   // Show error message for insufficient payment
-                            //   showDialog(
-                            //     context: context,
-                            //     builder: (BuildContext context) {
-                            //       return AlertDialog(
-                            //         title: const Text("Error"),
-                            //         content: const Text(
-                            //             "Insufficient amount. Please enter a higher amount."),
-                            //         actions: <Widget>[
-                            //           TextButton(
-                            //             onPressed: () {
-                            //               Navigator.of(context).pop();
-                            //             },
-                            //             child: const Text('Close'),
-                            //           ),
-                            //         ],
-                            //       );
-                            //     },
-                            //   );
-                            // }
+                            double amountPaid =
+                                double.tryParse(_amountPaidController.text) ??
+                                    0.0;
+
+                            // Calculate the total
+                            double total = calculateTotal();
+
+                            // Check if amount paid is sufficient
+                            if (amountPaid >= total) {
+                              // Proceed with submitting the sales details
+                              _addSalesDetails();
+
+                              // Add a delay if needed
+                              Future.delayed(const Duration(seconds: 2));
+
+                              // Add sales headers
+                              _addSalesHeaders(
+                                  calculateSubtotal(),
+                                  calculateTotalDiscount(),
+                                  total,
+                                  amountPaid.toString());
+
+                              // Add a delay if needed
+                              Future.delayed(const Duration(seconds: 2));
+
+                              // Truncate on_transaction table
+                              _truncateOnTransaction();
+
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        const POSMain()), // Replace with your actual Home widget
+                              );
+
+                            } else {
+                              // Show error message for insufficient payment
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return AlertDialog(
+                                    title: const Text("Error"),
+                                    content: const Text(
+                                        "Insufficient amount. Please enter a higher amount."),
+                                    actions: <Widget>[
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.of(context).pop();
+                                        },
+                                        child: const Text('Close'),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
+                            }
                           },
                           child: const Text('Submit'),
                         ),

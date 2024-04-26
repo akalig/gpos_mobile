@@ -99,6 +99,7 @@ class _MobilePOSState extends State<MobilePOS> {
                                 DataColumn(label: Text('Subtotal')),
                                 DataColumn(label: Text('Discount')),
                                 DataColumn(label: Text('Total')),
+                                DataColumn(label: Text('Date and Time')),
                                 DataColumn(label: Text('Actions')),
                               ],
                               rows: _salesHeaders.map((transaction) {
@@ -107,6 +108,7 @@ class _MobilePOSState extends State<MobilePOS> {
                                   DataCell(Text(transaction['subtotal'].toString())),
                                   DataCell(Text(transaction['total_discount'].toString())),
                                   DataCell(Text(transaction['total'].toString())),
+                                  DataCell(Text(transaction['created_at'].toString())),
                                   DataCell(
                                     Padding(
                                       padding: const EdgeInsets.all(8.0),

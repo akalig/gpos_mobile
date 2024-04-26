@@ -89,18 +89,19 @@ class SQLHelper {
   /// * Create Sales Headers Table *
   static Future<void> createSalesHeadersTable(sql.Database database) async {
     await database.execute("""CREATE TABLE sales_headers(
-      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-      transaction_code INTEGER,
-      subtotal DOUBLE,
-      total_discount DOUBLE,
-      total DOUBLE,
-      amount_paid DOUBLE,
-      change DOUBLE,
-      status TEXT,
-      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-      )""");
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    transaction_code INTEGER,
+    subtotal DOUBLE,
+    total_discount DOUBLE,
+    total DOUBLE,
+    amount_paid DOUBLE,
+    change DOUBLE,
+    status TEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )""");
     print("...creating a Sales headers table");
   }
+
 
   static Future<sql.Database> db() async {
     return sql.openDatabase(
@@ -469,6 +470,9 @@ class SQLHelper {
 
     double change = amountPaid - total;
 
+    // Get the current timestamp
+    int currentTime = DateTime.now().millisecondsSinceEpoch;
+
     // Get the next available transaction_code for sales_details
     List<Map<String, dynamic>> salesHeaders = await getSalesCount();
     int nextTransactionCode = 1000001;
@@ -486,7 +490,8 @@ class SQLHelper {
       'total': total,
       'amount_paid': amountPaid,
       'change': change,
-      'status': 'done'
+      'status': 'done',
+      'created_at': currentTime, // Include created_at field
     };
 
     await db.insert('sales_headers', data, conflictAlgorithm: sql.ConflictAlgorithm.replace);
@@ -504,7 +509,24 @@ class SQLHelper {
     return db.query('sales_headers', orderBy: "id");
   }
 
-/** --------------------------------------------------------------------------------------- **/
+  /// * Get Sales Headers *
+  static Future<List<Map<String, dynamic>>> getDailySalesHeaders() async {
+    final db = await SQLHelper.db();
+    return db.query('sales_headers', orderBy: "id");
+  }
+
+  static Future<List<Map<String, dynamic>>> getWeeklySalesData() async {
+    final db = await SQLHelper.db();
+    // Query to sum total by date and return the date and total for each day
+    return db.rawQuery('''
+        SELECT date(created_at) as date, SUM(total) as total
+        FROM sales_headers
+        GROUP BY date
+        ORDER BY date;
+    ''');
+  }
+
+  /** --------------------------------------------------------------------------------------- **/
 /** -------------------------------SALES DETAILS QUERIES----------------------------------- **/
 /** --------------------------------------------------------------------------------------- **/
 
@@ -514,6 +536,9 @@ class SQLHelper {
 
     // Get all data from on_transaction table
     List<Map<String, dynamic>> onTransactionData = await db.query('on_transaction');
+
+    // Get the current timestamp
+    int currentTime = DateTime.now().millisecondsSinceEpoch;
 
     // Get the next available transaction_code for sales_details
     List<Map<String, dynamic>> salesDetails = await getSalesDetailsCount();
@@ -537,6 +562,7 @@ class SQLHelper {
         'ordering_level': transaction['ordering_level'],
         'subtotal': transaction['subtotal'],
         'total': transaction['total'],
+        'created_at': currentTime,
       };
 
       // Insert data into sales_details table
@@ -555,4 +581,11 @@ class SQLHelper {
     final db = await SQLHelper.db();
     return db.query('sales_details', orderBy: "id");
   }
+
+  /// * Get Sales Details by Transaction Code *
+  static Future<List<Map<String, dynamic>>> getSalesDetailsByTransactionCode(int transactionCode) async {
+    final db = await SQLHelper.db();
+    return db.query('sales_details', where: "transaction_code = ?", whereArgs: [transactionCode]);
+  }
+
 }

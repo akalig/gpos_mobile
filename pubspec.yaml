@@ -52,6 +52,7 @@ dev_dependencies:
   camera: ^0.10.5+9
   bluetooth_print: ^4.3.0
   permission_handler: ^11.3.1
+  fl_chart: ^0.67.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
