@@ -37,20 +37,26 @@ class _MobileProductDetailsState extends State<MobileProductDetails> {
   // Method to capture a photo using the device camera
   Future<void> _capturePhoto() async {
     final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.camera);
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.camera,
+      imageQuality: 50, // Adjust the quality here (0 to 100)
+    );
     setState(() {
       _imageFile = pickedFile;
     });
   }
 
-  // Method to upload a photo from the device gallery
   Future<void> _uploadPhoto() async {
     final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 50, // Adjust the quality here (0 to 100)
+    );
     setState(() {
       _imageFile = pickedFile;
     });
   }
+
 
   Future<void> _selectManufacturedDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -63,7 +69,8 @@ class _MobileProductDetailsState extends State<MobileProductDetails> {
       setState(() {
         _manufacturedDate = picked;
         _manufacturedDateController.text =
-            "${picked.day}/${picked.month}/${picked.year}"; // Update the text field with the selected date
+        "${picked.day}/${picked.month}/${picked
+            .year}"; // Update the text field with the selected date
       });
     }
   }
@@ -79,7 +86,8 @@ class _MobileProductDetailsState extends State<MobileProductDetails> {
       setState(() {
         _expirationDate = picked;
         _expirationDateController.text =
-            "${picked.day}/${picked.month}/${picked.year}"; // Update the text field with the selected date
+        "${picked.day}/${picked.month}/${picked
+            .year}"; // Update the text field with the selected date
       });
     }
   }
@@ -129,6 +137,7 @@ class _MobileProductDetailsState extends State<MobileProductDetails> {
   //   _quantityController.dispose();
   //   super.dispose();
   // }
+
 
   /// * ADD PRODUCTS CLASS **
   Future<void> _addProductsDetails() async {
@@ -245,7 +254,7 @@ class _MobileProductDetailsState extends State<MobileProductDetails> {
   void addProductsDetailsDialog(BuildContext context, int? id) async {
     if (id != null) {
       final existingProductDetails =
-          _productsDetails.firstWhere((element) => element['id'] == id);
+      _productsDetails.firstWhere((element) => element['id'] == id);
       _descriptionController.text = existingProductDetails['description'];
       // _productTypeValue = existingProductDetails['product_type'].toString();
       _unitCostController.text = existingProductDetails['unit_cost'].toString();
@@ -280,10 +289,10 @@ class _MobileProductDetailsState extends State<MobileProductDetails> {
                       height: 200, // Adjust the height to your preference
                       child: _imageFile != null
                           ? Image.file(
-                              File(_imageFile!.path),
-                              fit: BoxFit
-                                  .cover, // Ensure the image fills the container without stretching
-                            )
+                        File(_imageFile!.path),
+                        fit: BoxFit
+                            .cover, // Ensure the image fills the container without stretching
+                      )
                           : const Placeholder(), // Placeholder widget if no image is selected
                     ),
 
@@ -296,7 +305,7 @@ class _MobileProductDetailsState extends State<MobileProductDetails> {
                           onPressed: () async {
                             await _capturePhoto();
                             setState(
-                                () {}); // Rebuild the dialog UI after capturing the photo
+                                    () {}); // Rebuild the dialog UI after capturing the photo
                           },
                           icon: const Icon(Icons.camera_alt),
                         ),
@@ -305,7 +314,7 @@ class _MobileProductDetailsState extends State<MobileProductDetails> {
                           onPressed: () async {
                             await _uploadPhoto();
                             setState(
-                                () {}); // Rebuild the dialog UI after capturing the photo
+                                    () {}); // Rebuild the dialog UI after capturing the photo
                           },
                           icon: const Icon(Icons.image),
                         ),
@@ -317,7 +326,7 @@ class _MobileProductDetailsState extends State<MobileProductDetails> {
                     TextField(
                       controller: _descriptionController,
                       decoration:
-                          const InputDecoration(hintText: 'Product Name'),
+                      const InputDecoration(hintText: 'Product Name'),
                     ),
 
                     const SizedBox(height: 10),
@@ -407,7 +416,7 @@ class _MobileProductDetailsState extends State<MobileProductDetails> {
                     // Is Discounted Dropdown
                     DropdownButtonFormField<String>(
                       value:
-                          _isDiscountValue.isNotEmpty ? _isDiscountValue : null,
+                      _isDiscountValue.isNotEmpty ? _isDiscountValue : null,
                       hint: const Text('Is Discounted?'),
                       items: const [
                         DropdownMenuItem<String>(
@@ -479,7 +488,7 @@ class _MobileProductDetailsState extends State<MobileProductDetails> {
                     TextField(
                       controller: _searchCodeController,
                       decoration:
-                          const InputDecoration(hintText: 'Search Code'),
+                      const InputDecoration(hintText: 'Search Code'),
                     ),
 
                     const SizedBox(height: 10),
@@ -497,28 +506,63 @@ class _MobileProductDetailsState extends State<MobileProductDetails> {
           actions: [
             TextButton(
               onPressed: () async {
-                if (id == null) {
-                  await _addProductsDetails();
+                if (_descriptionController.text == '' ||
+                    _productTypeValue == '' ||
+                    _unitCostController.text == '' ||
+                    _sellPriceController.text == '' ||
+                    _supplierValue == '' ||
+                    _isTaxExemptValue == '' ||
+                    _isDiscountValue == '' ||
+                    _manufacturedDateController.text == '' ||
+                    _searchCodeController.text == '' ||
+                    _quantityController.text == ''
+                ) {
+
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: const Text('Missing fields'),
+                        content: const Text('Some required fields are still blank, please check the required fields. Thank you.'),
+                        actions: [
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            child: const Text('Okay'),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+
+                } else {
+
+                  if (id == null) {
+                    await _addProductsDetails();
+                  }
+
+                  if (id != null) {
+                    await _updateProductsDetails(id);
+                  }
+
+                  _descriptionController.text = '';
+                  _productTypeValue = '';
+                  _unitCostController.text = '';
+                  _sellPriceController.text = '';
+                  _supplierValue = '';
+                  _isTaxExemptValue = '';
+                  _isDiscountValue = '';
+                  _manufacturedDateController.text = '';
+                  _expirationDateController.text = '';
+                  _searchCodeController.text = '';
+                  _quantityController.text = '';
+                  _imageFile = null;
+
+                  Navigator.of(context).pop();
+
                 }
 
-                if (id != null) {
-                  await _updateProductsDetails(id);
-                }
-
-                _descriptionController.text = '';
-                _productTypeValue = '';
-                _unitCostController.text = '';
-                _sellPriceController.text = '';
-                _supplierValue = '';
-                _isTaxExemptValue = '';
-                _isDiscountValue = '';
-                _manufacturedDateController.text = '';
-                _expirationDateController.text = '';
-                _searchCodeController.text = '';
-                _quantityController.text = '';
-                _imageFile = null;
-
-                Navigator.of(context).pop();
               },
               child: Text(id == null ? 'Submit' : 'Update'),
             ),
@@ -580,12 +624,13 @@ class _MobileProductDetailsState extends State<MobileProductDetails> {
         centerTitle: true,
         // Add hamburger icon to open the drawer
         leading: Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Icons.menu),
-            onPressed: () {
-              Scaffold.of(context).openDrawer();
-            },
-          ),
+          builder: (context) =>
+              IconButton(
+                icon: const Icon(Icons.menu),
+                onPressed: () {
+                  Scaffold.of(context).openDrawer();
+                },
+              ),
         ),
       ),
       body: Padding(
@@ -639,52 +684,51 @@ class _MobileProductDetailsState extends State<MobileProductDetails> {
             Expanded(
               child: _productsDetails.isNotEmpty
                   ? ListView.builder(
-                      itemCount: _productsDetails.length,
-                      itemBuilder: (context, index) => Card(
-                        color: Colors.white70,
-                        margin: const EdgeInsets.all(5),
-                        child: ListTile(
-                          leading: _productsDetails.isNotEmpty &&
-                              _productsDetails[0]['image'] != null &&
-                              (_productsDetails[0]['image'] as Uint8List).isNotEmpty
-                              ? Image.memory(
-                            _productsDetails[0]['image'], // Assuming 'image' contains the Uint8List image data
-                            width: 50, // Adjust as needed
-                            height: 50, // Adjust as needed
-                            fit: BoxFit.cover,
-                          ) : null,
-                          title: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(_productsDetails[index]['description']),
-                              Text(
-                                  'Product Code: ${_productsDetails[index]['product_code']}'),
-                            ],
-                          ),
-                          trailing: SizedBox(
-                            width: 100,
-                            child: Row(
-                              children: [
-                                IconButton(
-                                  onPressed: () => addProductsDetailsDialog(
-                                      context, _productsDetails[index]['id']),
-                                  icon: const Icon(Icons.edit),
-                                ),
-                                IconButton(
-                                  onPressed: () => deleteProductDetailsDialog(
-                                      context, _productsDetails[index]['id']),
-                                  icon: const Icon(Icons.delete),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
+                itemCount: _productsDetails.length,
+                itemBuilder: (context, index) => Card(
+                  color: Colors.white70,
+                  margin: const EdgeInsets.all(5),
+                  child: ListTile(
+                    leading: _productsDetails[index]['image'] != null &&
+                        (_productsDetails[index]['image'] as Uint8List).isNotEmpty
+                        ? Image.memory(
+                      _productsDetails[index]['image'],
+                      // Assuming 'image' contains the Uint8List image data
+                      width: 50, // Adjust as needed
+                      height: 50, // Adjust as needed
+                      fit: BoxFit.cover,
                     )
-                  : const Center(
-                      child: Text("No supplier available."),
+                        : null,
+                    title: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(_productsDetails[index]['description']),
+                        Text('Product Code: ${_productsDetails[index]['product_code']}'),
+                      ],
                     ),
+                    trailing: SizedBox(
+                      width: 100,
+                      child: Row(
+                        children: [
+                          IconButton(
+                            onPressed: () => addProductsDetailsDialog(context, _productsDetails[index]['id']),
+                            icon: const Icon(Icons.edit),
+                          ),
+                          IconButton(
+                            onPressed: () => deleteProductDetailsDialog(context, _productsDetails[index]['id']),
+                            icon: const Icon(Icons.delete),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              )
+                  : const Center(
+                child: Text("No supplier available."),
+              ),
             ),
+
           ],
         ),
       ),

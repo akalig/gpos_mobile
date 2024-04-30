@@ -452,6 +452,32 @@ class SQLHelper {
     return 0; // Return 0 if no transaction found
   }
 
+  /// * Update discount *
+  static Future<int> updateQuantity(int productCode, int quantity) async {
+    final db = await SQLHelper.db();
+
+    List<Map<String, dynamic>> onTransaction = await db.query('on_transaction',
+        where: 'product_code = ?', whereArgs: [productCode]);
+
+    if (onTransaction.isNotEmpty) {
+      double total = onTransaction.first['total'];
+
+      double updatedTotal = total * quantity;
+
+      final data = {
+        'ordering_level': quantity,
+        'total': updatedTotal,
+        'subtotal': updatedTotal,
+      };
+
+      final result = await db.update('on_transaction', data,
+          where: "product_code = ?", whereArgs: [productCode]);
+      return result;
+    }
+
+    return 0; // Return 0 if no transaction found
+  }
+
   /// * Truncate On Transaction *
   static Future<void> truncateOnTransaction() async {
     final db = await SQLHelper.db();
@@ -491,7 +517,7 @@ class SQLHelper {
       'amount_paid': amountPaid,
       'change': change,
       'status': 'done',
-      'created_at': currentTime, // Include created_at field
+      'created_at': currentTime,
     };
 
     await db.insert('sales_headers', data, conflictAlgorithm: sql.ConflictAlgorithm.replace);
@@ -525,10 +551,9 @@ class SQLHelper {
         ORDER BY date;
     ''');
   }
-
   /** --------------------------------------------------------------------------------------- **/
-/** -------------------------------SALES DETAILS QUERIES----------------------------------- **/
-/** --------------------------------------------------------------------------------------- **/
+  /** -------------------------------SALES DETAILS QUERIES----------------------------------- **/
+  /** --------------------------------------------------------------------------------------- **/
 
   /// * Create Sales Details *
   static Future<void> createSalesDetails() async {
@@ -587,5 +612,17 @@ class SQLHelper {
     final db = await SQLHelper.db();
     return db.query('sales_details', where: "transaction_code = ?", whereArgs: [transactionCode]);
   }
+
+  /// * get Sales Product Count With Description for Pie Chart*
+  static Future<List<Map<String, dynamic>>> getSalesProductCountWithDescription() async {
+    final db = await SQLHelper.db();
+    return db.rawQuery('''
+    SELECT p.description, s.product_code, COUNT(s.ordering_level) as count
+    FROM sales_details s
+    INNER JOIN products p ON s.product_code = p.product_code
+    GROUP BY s.product_code
+  ''');
+  }
+
 
 }
