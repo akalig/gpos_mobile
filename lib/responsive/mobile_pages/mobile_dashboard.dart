@@ -1,9 +1,8 @@
-import 'dart:async';
-import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:fl_chart/fl_chart.dart';
-import '../../database/database_helper.dart';
+import '../../charts/pie_chart.dart';
 import '../../sidebar_menu/sidebar_menu.dart';
+import '../../database/database_helper.dart';
+import 'package:intl/intl.dart';
 
 class MobileDashboard extends StatefulWidget {
   const MobileDashboard({Key? key}) : super(key: key);
@@ -13,13 +12,22 @@ class MobileDashboard extends StatefulWidget {
 }
 
 class _MobileDashboardState extends State<MobileDashboard> {
-  late Future<List<Map<String, dynamic>>> _salesData;
-  late Map<String, Color> _colorMap = {}; // Initialize color map with an empty map
+  List<Map<String, dynamic>> _dailySalesData = [];
+
+  bool _isLoading = true;
+
+  void _refreshSalesHeaders() async {
+    final data = await SQLHelper.getSalesHeaders();
+    setState(() {
+      _dailySalesData = data;
+      _isLoading = false;
+    });
+  }
 
   @override
   void initState() {
     super.initState();
-    _salesData = SQLHelper.getSalesProductCountWithDescription();
+    _refreshSalesHeaders();
   }
 
   @override
@@ -28,7 +36,6 @@ class _MobileDashboardState extends State<MobileDashboard> {
       appBar: AppBar(
         title: const Text('D A S H B O A R D'),
         centerTitle: true,
-        // Add hamburger icon to open the drawer
         leading: Builder(
           builder: (context) => IconButton(
             icon: const Icon(Icons.menu),
@@ -38,118 +45,122 @@ class _MobileDashboardState extends State<MobileDashboard> {
           ),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          children: [
-            Container(
-              width: MediaQuery.of(context).size.width * 0.9,
-              height: MediaQuery.of(context).size.height * 0.3,
-              child: FutureBuilder<List<Map<String, dynamic>>>(
-                future: _salesData,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  } else if (snapshot.hasError) {
-                    return Center(child: Text('Error: ${snapshot.error}'));
-                  } else {
-                    // Process the retrieved data and update the PieChart
-                    final salesData = snapshot.data!;
-                    return _buildPieChart(salesData);
-                  }
-                },
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Container(
+                      height: 100,
+                      decoration: BoxDecoration(
+                        color: Colors.blue,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      padding: const EdgeInsets.all(20),
+                      margin: const EdgeInsets.all(8),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text(
+                            'Total Sales',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          FutureBuilder<List<Map<String, dynamic>>>(
+                            future: Future.value(_dailySalesData),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState == ConnectionState.waiting) {
+                                return const CircularProgressIndicator(color: Colors.white);
+                              } else if (snapshot.hasError) {
+                                return Text(
+                                  'Error: ${snapshot.error}',
+                                  style: const TextStyle(color: Colors.white),
+                                );
+                              } else {
+                                final data = snapshot.data!;
+                                final totalSales = data.isNotEmpty ? data.first['total_sales'] ?? 0 : 0; // Corrected column name
+                                return Text(
+                                  '\₱$totalSales',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                );
+                              }
+                            },
+                          ),
+
+                        ],
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Container(
+                      height: 100,
+                      decoration: BoxDecoration(
+                        color: Colors.green,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      padding: const EdgeInsets.all(20),
+                      margin: const EdgeInsets.all(8),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text(
+                            'Total Transactions',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          FutureBuilder<List<Map<String, dynamic>>>(
+                            future: Future.value(_dailySalesData),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState == ConnectionState.waiting) {
+                                return const CircularProgressIndicator(color: Colors.white);
+                              } else if (snapshot.hasError) {
+                                return Text(
+                                  'Error: ${snapshot.error}',
+                                  style: const TextStyle(color: Colors.white),
+                                );
+                              } else {
+                                final data = snapshot.data!;
+                                final totalTransactions = data.isNotEmpty ? data.first['transactions_count'] ?? 0 : 0; // Corrected column name
+                                return Text(
+                                  '$totalTransactions',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                );
+                              }
+                            },
+                          ),
+
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(height: 20),
-            // Label for Pie Chart
-            Expanded(
-              child: FutureBuilder<List<Map<String, dynamic>>>(
-                future: _salesData,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(child: CircularProgressIndicator());
-                  } else if (snapshot.hasError) {
-                    return Center(child: Text('Error: ${snapshot.error}'));
-                  } else {
-                    final salesData = snapshot.data!;
-                    return ListView.builder(
-                      itemCount: salesData.length,
-                      itemBuilder: (context, index) {
-                        final description = salesData[index]['description'] as String;
-                        final color = _getColorForProduct(description); // Get color from map
-                        return _buildLabel(description, color);
-                      },
-                    );
-                  }
-                },
-              ),
-            ),
-          ],
+              const SizedBox(height: 20),
+              const PieChartWidget(),
+              const SizedBox(height: 20),
+            ],
+          ),
         ),
       ),
-      // Use SidebarMenu widget as the drawer
       drawer: const SidebarMenu(),
     );
-  }
-
-  Color _getColorForProduct(String productName) {
-    // Check if color is already assigned to the product, if not generate and assign a new color
-    if (!_colorMap.containsKey(productName)) {
-      _colorMap[productName] = _getRandomColor();
-    }
-    return _colorMap[productName]!;
-  }
-
-  Widget _buildLabel(String productName, Color color) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Row(
-        children: [
-          Container(
-            width: 20,
-            height: 20,
-            color: color,
-          ),
-          const SizedBox(width: 8),
-          Text(productName),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPieChart(List<Map<String, dynamic>> salesData) {
-    final List<PieChartSectionData> sections = [];
-
-    // Process the sales data to create PieChartSectionData
-    for (final sale in salesData) {
-      final int count = sale['count'];
-      final description = sale['description'] as String;
-      final color = _getColorForProduct(description); // Get color from map
-
-      final section = PieChartSectionData(
-        value: count.toDouble(),
-        title: '$count', // Include count in the title
-        showTitle: true, // Show the title
-        radius: 70,
-        color: color,
-        titleStyle: const TextStyle(
-          fontSize: 16, // Adjust the font size as needed
-          fontWeight: FontWeight.bold, // Add bold font weight
-          color: Colors.white, // Set the text color
-        ),
-      );
-      sections.add(section);
-    }
-
-    return PieChart(
-      PieChartData(
-        sections: sections,
-      ),
-    );
-  }
-
-
-  Color _getRandomColor() {
-    return Color((Random().nextDouble() * 0xFFFFFF).toInt()).withOpacity(1.0);
   }
 }

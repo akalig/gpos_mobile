@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart' as sql;
+import 'package:intl/intl.dart';
 
 class SQLHelper {
   /** --------------------------------------------------------------------------------------- **/
@@ -551,6 +552,24 @@ class SQLHelper {
         ORDER BY date;
     ''');
   }
+
+  static Future<List<Map<String, dynamic>>> getDailySalesAndTransactionData() async {
+    final db = await SQLHelper.db();
+    final todayFormatted = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+    // Query to sum total by date and return the date and total for each day
+    final results = await db.rawQuery('''
+    SELECT COUNT(id) AS transactions_count, SUM(total) AS total_sales
+    FROM sales_headers
+    WHERE date(created_at) = '$todayFormatted';
+  ''');
+
+    print('SQL query result: $results');
+
+    return results;
+  }
+
+
   /** --------------------------------------------------------------------------------------- **/
   /** -------------------------------SALES DETAILS QUERIES----------------------------------- **/
   /** --------------------------------------------------------------------------------------- **/
