@@ -278,7 +278,7 @@ class _TabletDashboardState extends State<TabletProductTypes> {
                     width: 50,
                     color: Colors.deepPurple[300],
                   ),
-                )
+                ),
               ],
             ),
           ),

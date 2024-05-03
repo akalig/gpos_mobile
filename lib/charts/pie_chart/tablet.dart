@@ -2,16 +2,16 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../database/database_helper.dart';
+import '../../database/database_helper.dart';
 
-class PieChartWidget extends StatefulWidget {
-  const PieChartWidget({Key? key}) : super(key: key);
+class PieChartWidgetTablet extends StatefulWidget {
+  const PieChartWidgetTablet({Key? key}) : super(key: key);
 
   @override
-  _PieChartWidgetState createState() => _PieChartWidgetState();
+  _PieChartWidgetTabletState createState() => _PieChartWidgetTabletState();
 }
 
-class _PieChartWidgetState extends State<PieChartWidget> {
+class _PieChartWidgetTabletState extends State<PieChartWidgetTablet> {
   late Future<List<Map<String, dynamic>>> _salesData;
   late Map<String, Color> _colorMap = {}; // Initialize color map with an empty map
 
@@ -26,7 +26,6 @@ class _PieChartWidgetState extends State<PieChartWidget> {
     return Column(
       children: [
         Container(
-          width: MediaQuery.of(context).size.width * 0.9,
           height: MediaQuery.of(context).size.height * 0.3,
           child: FutureBuilder<List<Map<String, dynamic>>>(
             future: _salesData,
@@ -44,11 +43,9 @@ class _PieChartWidgetState extends State<PieChartWidget> {
           ),
         ),
 
-        const SizedBox(height: 20),
-
         // Label for Pie Chart
         Container(
-          height: MediaQuery.of(context).size.height * 0.5, // Set a fixed height
+          height: MediaQuery.of(context).size.height * 0.9, // Set a fixed height
           child: FutureBuilder<List<Map<String, dynamic>>>(
             future: _salesData,
             builder: (context, snapshot) {
@@ -112,7 +109,7 @@ class _PieChartWidgetState extends State<PieChartWidget> {
         value: count.toDouble(),
         title: '$count', // Include count in the title
         showTitle: true, // Show the title
-        radius: 70,
+        radius: 50,
         color: color,
         titleStyle: const TextStyle(
           fontSize: 16, // Adjust the font size as needed

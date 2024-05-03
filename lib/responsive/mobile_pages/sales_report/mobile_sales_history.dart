@@ -97,44 +97,40 @@ class _MobileSalesHistoryState extends State<MobileSalesHistory> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: Column(
-          children: [
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: SingleChildScrollView(
-                scrollDirection: Axis.vertical,
-                child: DataTable(
-                  columnSpacing: 50,
-                  columns: const [
-                    DataColumn(label: Text('Transaction Code')),
-                    DataColumn(label: Text('Subtotal')),
-                    DataColumn(label: Text('Discount')),
-                    DataColumn(label: Text('Total')),
-                    DataColumn(label: Text('Date and Time')),
-                  ],
-                  // Remove empty rows and then map the transactions to rows in the DataTable
-                  rows: _salesHeaders
-                      .where((transaction) {
-                    var timestamp = transaction['created_at'];
-                    var date = DateTime.fromMillisecondsSinceEpoch(timestamp);
-                    return (_startDate == null || date.isAfter(_startDate!)) &&
-                        (_endDate == null || date.isBefore(_endDate!.add(Duration(days: 1))));
-                  })
-                      .map((transaction) => DataRow(cells: [
-                    DataCell(Text(transaction['transaction_code'].toString())),
-                    DataCell(Text(transaction['subtotal'].toString())),
-                    DataCell(Text(transaction['total_discount'].toString())),
-                    DataCell(Text(transaction['total'].toString())),
-                    DataCell(Text(formatTimestamp(transaction['created_at']))),
-                  ]))
-                      .toList(),
-
-                ),
-              ),
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.vertical,
+            child: DataTable(
+              columnSpacing: 50,
+              columns: const [
+                DataColumn(label: Text('Transaction Code')),
+                DataColumn(label: Text('Subtotal')),
+                DataColumn(label: Text('Discount')),
+                DataColumn(label: Text('Total')),
+                DataColumn(label: Text('Date and Time')),
+              ],
+              // Remove empty rows and then map the transactions to rows in the DataTable
+              rows: _salesHeaders
+                  .where((transaction) {
+                var timestamp = transaction['created_at'];
+                var date = DateTime.fromMillisecondsSinceEpoch(timestamp);
+                return (_startDate == null || date.isAfter(_startDate!)) &&
+                    (_endDate == null || date.isBefore(_endDate!.add(Duration(days: 1))));
+              })
+                  .map((transaction) => DataRow(cells: [
+                DataCell(Text(transaction['transaction_code'].toString())),
+                DataCell(Text(transaction['subtotal'].toString())),
+                DataCell(Text(transaction['total_discount'].toString())),
+                DataCell(Text(transaction['total'].toString())),
+                DataCell(Text(formatTimestamp(transaction['created_at']))),
+              ]))
+                  .toList(),
             ),
-          ],
+          ),
         ),
       ),
+
       // Use SidebarMenu widget as the drawer
       drawer: const SidebarMenu(),
     );

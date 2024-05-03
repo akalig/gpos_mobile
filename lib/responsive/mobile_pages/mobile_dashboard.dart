@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../charts/pie_chart.dart';
+import '../../charts/pie_chart/mobile.dart';
 import '../../sidebar_menu/sidebar_menu.dart';
 import '../../database/database_helper.dart';
 import 'package:intl/intl.dart';
@@ -13,7 +13,6 @@ class MobileDashboard extends StatefulWidget {
 
 class _MobileDashboardState extends State<MobileDashboard> {
   List<Map<String, dynamic>> _dailySalesData = [];
-
   bool _isLoading = true;
 
   void _refreshSalesHeaders() async {
@@ -154,7 +153,7 @@ class _MobileDashboardState extends State<MobileDashboard> {
                 ],
               ),
               const SizedBox(height: 20),
-              const PieChartWidget(),
+              const PieChartWidgetMobile(),
               const SizedBox(height: 20),
             ],
           ),
