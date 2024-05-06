@@ -71,6 +71,7 @@ class _TabletDashboardState extends State<TabletDashboard> {
                         child: Padding(
                           padding: const EdgeInsets.all(0.0),
                           child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -82,6 +83,7 @@ class _TabletDashboardState extends State<TabletDashboard> {
                                         borderRadius: BorderRadius.circular(10),
                                       ),
                                       margin: const EdgeInsets.all(8),
+                                      padding: const EdgeInsets.all(8.0),
                                       child: Column(
                                         mainAxisAlignment: MainAxisAlignment.center,
                                         children: [
@@ -129,6 +131,7 @@ class _TabletDashboardState extends State<TabletDashboard> {
                                         borderRadius: BorderRadius.circular(10),
                                       ),
                                       margin: const EdgeInsets.all(8),
+                                      padding: const EdgeInsets.all(8.0),
                                       child: Column(
                                         mainAxisAlignment: MainAxisAlignment.center,
                                         children: [
@@ -171,25 +174,20 @@ class _TabletDashboardState extends State<TabletDashboard> {
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 1),
                               const PieChartWidgetTablet(),
-                              const SizedBox(height: 1),
-                              // Add more content here if necessary
                             ],
                           ),
                         ),
                       ),
-
-
                     ],
                   ),
                 ),
 
                 // second column
                 Padding(
-                  padding: const EdgeInsets.all(8.0),
+                  padding: const EdgeInsets.all(2.0),
                   child: Container(
-                    width: 50,
+                    width: 5,
                     color: Colors.deepPurple[300],
                   ),
                 ),

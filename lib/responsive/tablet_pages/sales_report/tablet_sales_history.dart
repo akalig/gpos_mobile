@@ -123,56 +123,64 @@ class _TabletSalesHistoryState extends State<TabletSalesHistory> {
               children: [
                 // First column
                 Expanded(
-                  child: Column(
-                    children: [
-                      // youtube video
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: AspectRatio(
-                          aspectRatio: 120 / 9,
-                          child: Container(
-                            color: Colors.deepPurple[200],
-                          ),
-                        ),
-                      ),
-
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: SingleChildScrollView(
-                          scrollDirection: Axis.vertical,
-                          child: SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: DataTable(
-                              columnSpacing: 50,
-                              columns: const [
-                                DataColumn(label: Text('Transaction Code')),
-                                DataColumn(label: Text('Subtotal')),
-                                DataColumn(label: Text('Discount')),
-                                DataColumn(label: Text('Total')),
-                                DataColumn(label: Text('Date and Time')),
-                              ],
-                              // Remove empty rows and then map the transactions to rows in the DataTable
-                              rows: _salesHeaders
-                                  .where((transaction) {
-                                var timestamp = transaction['created_at'];
-                                var date = DateTime.fromMillisecondsSinceEpoch(timestamp);
-                                return (_startDate == null || date.isAfter(_startDate!)) &&
-                                    (_endDate == null || date.isBefore(_endDate!.add(Duration(days: 1))));
-                              })
-                                  .map((transaction) => DataRow(cells: [
-                                DataCell(Text(transaction['transaction_code'].toString())),
-                                DataCell(Text(transaction['subtotal'].toString())),
-                                DataCell(Text(transaction['total_discount'].toString())),
-                                DataCell(Text(transaction['total'].toString())),
-                                DataCell(Text(formatTimestamp(transaction['created_at']))),
-                              ]))
-                                  .toList(),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.vertical,
+                    child: Column(
+                      children: [
+                        // youtube video
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: AspectRatio(
+                            aspectRatio: 120 / 9,
+                            child: Container(
+                              color: Colors.deepPurple[200],
                             ),
                           ),
                         ),
-                      ),
 
-                    ],
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: DataTable(
+                            columnSpacing: 50,
+                            columns: const [
+                              DataColumn(label: Text('Transaction Code')),
+                              DataColumn(label: Text('Subtotal')),
+                              DataColumn(label: Text('Discount')),
+                              DataColumn(label: Text('Total')),
+                              DataColumn(label: Text('Date and Time')),
+                            ],
+                            // Remove empty rows and then map the transactions to rows in the DataTable
+                            rows: _salesHeaders
+                                .where((transaction) {
+                                  var timestamp = transaction['created_at'];
+                                  var date =
+                                      DateTime.fromMillisecondsSinceEpoch(
+                                          timestamp);
+                                  return (_startDate == null ||
+                                          date.isAfter(_startDate!)) &&
+                                      (_endDate == null ||
+                                          date.isBefore(_endDate!
+                                              .add(Duration(days: 1))));
+                                })
+                                .map((transaction) => DataRow(cells: [
+                                      DataCell(Text(
+                                          transaction['transaction_code']
+                                              .toString())),
+                                      DataCell(Text(
+                                          transaction['subtotal'].toString())),
+                                      DataCell(Text(
+                                          transaction['total_discount']
+                                              .toString())),
+                                      DataCell(Text(
+                                          transaction['total'].toString())),
+                                      DataCell(Text(formatTimestamp(
+                                          transaction['created_at']))),
+                                    ]))
+                                .toList(),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
 

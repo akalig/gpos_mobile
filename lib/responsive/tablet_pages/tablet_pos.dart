@@ -2,7 +2,10 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import '../../database/database_helper.dart';
+import '../../pages/pos_main.dart';
 import '../../sidebar_menu/sidebar_menu.dart';
+import 'package:bluetooth_print/bluetooth_print.dart';
+import 'package:bluetooth_print/bluetooth_print_model.dart';
 
 class TabletPOS extends StatefulWidget {
   const TabletPOS({Key? key}) : super(key: key);
@@ -17,7 +20,14 @@ class _TabletPOSState extends State<TabletPOS> {
   List<Map<String, dynamic>> _productsDetails = [];
   List<Map<String, dynamic>> _onTransaction = [];
   List<Map<String, dynamic>> _salesHeaders = [];
+  late TextEditingController _editDiscountController;
+  late TextEditingController _editQuantityController;
+  late TextEditingController _amountPaidController;
   bool _isLoading = true;
+
+  BluetoothPrint bluetoothPrint = BluetoothPrint.instance;
+  List<BluetoothDevice> _devices = [];
+  String _devicesMsg = "";
 
   void _refreshProductsDetails() async {
     final data = await SQLHelper.getProductsDetails();
@@ -30,6 +40,9 @@ class _TabletPOSState extends State<TabletPOS> {
   void _refreshOnTransaction() async {
     final data = await SQLHelper.getOnTransaction();
     setState(() {
+      _onTransaction = data;
+      _editDiscountController.text = '';
+      _editQuantityController.text = '';
       _onTransaction = data;
       _isLoading = false;
     });
@@ -46,6 +59,9 @@ class _TabletPOSState extends State<TabletPOS> {
   @override
   void initState() {
     super.initState();
+    _editDiscountController = TextEditingController();
+    _editQuantityController = TextEditingController();
+    _amountPaidController = TextEditingController();
     _scaffoldKey = GlobalKey<ScaffoldState>();
     _refreshProductsDetails();
     _refreshOnTransaction();
@@ -61,6 +77,41 @@ class _TabletPOSState extends State<TabletPOS> {
     _refreshProductsDetails();
     _refreshOnTransaction();
     _refreshSalesHeaders();
+  }
+
+  /// * ADD EDIT DISCOUNT CLASS **
+  Future<void> _addEditDiscount(int productNumber, String stDiscount) async {
+    double discount = double.parse(stDiscount);
+
+    await SQLHelper.updateDiscount(productNumber, discount);
+    _refreshOnTransaction();
+  }
+
+  /// * ADD EDIT QUANTITY CLASS **
+  Future<void> _addEditQuantity(int productNumber, String stQuantity) async {
+    int quantity = int.parse(stQuantity);
+
+    await SQLHelper.updateQuantity(productNumber, quantity);
+    _refreshOnTransaction();
+  }
+
+  /// * ADD SALES HEADERS CLASS **
+  Future<void> _addSalesHeaders(double subtotal, double totalDiscount,
+      double total, String amountPaid) async {
+    await SQLHelper.createSalesHeaders(
+        subtotal, totalDiscount, total, amountPaid);
+  }
+
+  /// * ADD SALES DETAILS CLASS **
+  Future<void> _addSalesDetails() async {
+    await SQLHelper.createSalesDetails();
+  }
+
+  /// * ADD TRUNCATE ON TRANSACTION CLASS **
+  Future<void> _truncateOnTransaction() async {
+    await SQLHelper.truncateOnTransaction();
+    _amountPaidController.text = '';
+    _refreshOnTransaction();
   }
 
   void _toggleDrawer() {
@@ -80,7 +131,9 @@ class _TabletPOSState extends State<TabletPOS> {
         // Add hamburger icon to toggle the drawer
         leading: Builder(
           builder: (context) => IconButton(
-            icon: _isDrawerOpen ? const Icon(Icons.menu_open) : const Icon(Icons.menu),
+            icon: _isDrawerOpen
+                ? const Icon(Icons.menu_open)
+                : const Icon(Icons.menu),
             onPressed: _toggleDrawer,
           ),
         ),
@@ -100,14 +153,15 @@ class _TabletPOSState extends State<TabletPOS> {
                         padding: const EdgeInsets.all(8.0),
                         child: Container(
                           decoration: BoxDecoration(
-                            color: Colors.deepPurple[100],
+                            color: Colors.white,
                             borderRadius: BorderRadius.circular(10.0),
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.black.withOpacity(0.1),
                                 spreadRadius: 1,
                                 blurRadius: 5,
-                                offset: Offset(0, 3), // changes position of shadow
+                                offset:
+                                    Offset(0, 3), // changes position of shadow
                               ),
                             ],
                           ),
@@ -115,12 +169,14 @@ class _TabletPOSState extends State<TabletPOS> {
                             children: [
                               const Expanded(
                                 child: Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 8.0),
+                                  padding:
+                                      EdgeInsets.symmetric(horizontal: 8.0),
                                   child: TextField(
                                     decoration: InputDecoration(
                                       hintText: 'Search',
                                       border: InputBorder.none,
-                                      hintStyle: TextStyle(color: Colors.black54),
+                                      hintStyle:
+                                          TextStyle(color: Colors.black54),
                                     ),
                                   ),
                                 ),
@@ -150,7 +206,8 @@ class _TabletPOSState extends State<TabletPOS> {
                       /*** PRODUCT DETAILS LIST ***/
                       Expanded(
                         child: GridView.builder(
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 2,
                             crossAxisSpacing: 8.0,
                             mainAxisSpacing: 8.0,
@@ -167,13 +224,19 @@ class _TabletPOSState extends State<TabletPOS> {
                               child: Padding(
                                 padding: const EdgeInsets.all(8.0),
                                 child: Container(
+                                  foregroundDecoration: const BoxDecoration(
+                                    color: Colors.grey,
+                                    backgroundBlendMode: BlendMode.saturation,
+                                  ),
                                   color: Colors.deepPurple[300],
                                   height: 80,
                                   width: 80,
                                   child: Stack(
                                     children: [
-                                      if (_productsDetails[index]['image'] != null &&
-                                          (_productsDetails[index]['image'] as Uint8List)
+                                      if (_productsDetails[index]['image'] !=
+                                              null &&
+                                          (_productsDetails[index]['image']
+                                                  as Uint8List)
                                               .isNotEmpty)
                                         Image.memory(
                                           _productsDetails[index]['image'],
@@ -188,13 +251,17 @@ class _TabletPOSState extends State<TabletPOS> {
                                         width: double.infinity,
                                       ),
                                       Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        mainAxisAlignment: MainAxisAlignment.end,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
                                         children: [
                                           Padding(
-                                            padding: const EdgeInsets.only(left: 8.0),
+                                            padding: const EdgeInsets.only(
+                                                left: 8.0),
                                             child: Text(
-                                              _productsDetails[index]['description'],
+                                              _productsDetails[index]
+                                                  ['description'],
                                               style: const TextStyle(
                                                 color: Colors.white,
                                                 fontSize: 14.0,
@@ -204,7 +271,8 @@ class _TabletPOSState extends State<TabletPOS> {
                                           ),
                                           const SizedBox(height: 1),
                                           Padding(
-                                            padding: const EdgeInsets.only(left: 8.0),
+                                            padding: const EdgeInsets.only(
+                                                left: 8.0),
                                             child: Text(
                                               'Price: ₱${_productsDetails[index]['sell_price'].toString()}',
                                               style: const TextStyle(
@@ -232,8 +300,510 @@ class _TabletPOSState extends State<TabletPOS> {
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Container(
-                    width: 300,
-                    color: Colors.white60,
+                    width: 350,
+                    color: Colors.white,
+                    child: Padding(
+                      padding: const EdgeInsets.all(2.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: SingleChildScrollView(
+                                scrollDirection: Axis.vertical,
+                                child: DataTable(
+                                  columnSpacing: 50,
+                                  columns: const [
+                                    DataColumn(label: Text('Description')),
+                                    DataColumn(label: Text('Price')),
+                                    DataColumn(label: Text('Quantity')),
+                                    DataColumn(label: Text('Subtotal')),
+                                    DataColumn(label: Text('Discount')),
+                                    DataColumn(label: Text('Total')),
+                                  ],
+                                  rows: _onTransaction.map((transaction) {
+                                    return DataRow(cells: [
+                                      DataCell(
+                                          Text(transaction['description'])),
+                                      DataCell(
+                                        Align(
+                                          alignment: Alignment.centerRight,
+                                          child: Text(transaction['sell_price']
+                                              .toStringAsFixed(2)),
+                                        ),
+                                      ),
+                                      DataCell(GestureDetector(
+                                        onTap: () {
+                                          showDialog(
+                                            context: context,
+                                            builder: (BuildContext context) {
+                                              return AlertDialog(
+                                                title: const Text(
+                                                    "Quantity Details"),
+                                                content: TextField(
+                                                  controller:
+                                                      _editQuantityController,
+                                                  decoration:
+                                                      const InputDecoration(
+                                                    hintText:
+                                                        'Enter New Quantity',
+                                                  ),
+                                                  keyboardType:
+                                                      TextInputType.number,
+                                                ),
+                                                actions: <Widget>[
+                                                  TextButton(
+                                                    onPressed: () async {
+                                                      _addEditQuantity(
+                                                          transaction[
+                                                              'product_code'],
+                                                          _editQuantityController
+                                                              .text);
+
+                                                      Navigator.of(context)
+                                                          .pop();
+                                                    },
+                                                    child: const Text('Submit'),
+                                                  ),
+                                                  TextButton(
+                                                    onPressed: () {
+                                                      Navigator.of(context)
+                                                          .pop();
+                                                    },
+                                                    child: const Text('Close'),
+                                                  ),
+                                                ],
+                                              );
+                                            },
+                                          );
+                                        },
+                                        child: Align(
+                                          alignment: Alignment.centerRight,
+                                          child: Text(
+                                              transaction['ordering_level']
+                                                  .toString()),
+                                        ),
+                                      )),
+                                      DataCell(
+                                        Align(
+                                          alignment: Alignment.centerRight,
+                                          child: Text(transaction['subtotal']
+                                              .toStringAsFixed(2)),
+                                        ),
+                                      ),
+                                      DataCell(GestureDetector(
+                                        onTap: () {
+                                          showDialog(
+                                            context: context,
+                                            builder: (BuildContext context) {
+                                              return AlertDialog(
+                                                title: const Text(
+                                                    "Discount Details"),
+                                                content: TextField(
+                                                  controller:
+                                                      _editDiscountController,
+                                                  decoration:
+                                                      const InputDecoration(
+                                                    hintText: 'Enter Discount',
+                                                    suffixIcon: Padding(
+                                                      padding:
+                                                          EdgeInsets.all(15),
+                                                      child: Text(
+                                                        '%',
+                                                        style: TextStyle(
+                                                          fontSize: 16,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  keyboardType:
+                                                      TextInputType.number,
+                                                ),
+                                                actions: <Widget>[
+                                                  TextButton(
+                                                    onPressed: () async {
+                                                      _addEditDiscount(
+                                                          transaction[
+                                                              'product_code'],
+                                                          _editDiscountController
+                                                              .text);
+
+                                                      Navigator.of(context)
+                                                          .pop();
+                                                    },
+                                                    child: const Text('Submit'),
+                                                  ),
+                                                  TextButton(
+                                                    onPressed: () {
+                                                      Navigator.of(context)
+                                                          .pop();
+                                                    },
+                                                    child: const Text('Close'),
+                                                  ),
+                                                ],
+                                              );
+                                            },
+                                          );
+                                        },
+                                        child: Align(
+                                          alignment: Alignment.centerRight,
+                                          child: Text(transaction['discount']
+                                              .toStringAsFixed(2)),
+                                        ),
+                                      )),
+                                      DataCell(
+                                        Align(
+                                          alignment: Alignment.centerRight,
+                                          child: Text(transaction['total']
+                                              .toStringAsFixed(2)),
+                                        ),
+                                      ),
+                                    ]);
+                                  }).toList(),
+                                ),
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 10.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    const Text('Subtotal:'),
+                                    Text(
+                                        '₱ ${calculateSubtotal().toStringAsFixed(2)}',
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold)),
+                                  ],
+                                ),
+                                const SizedBox(height: 5),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    const Text('Total Discount:'),
+                                    Text(
+                                        '₱ ${calculateTotalDiscount().toStringAsFixed(2)}',
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold)),
+                                  ],
+                                ),
+                                const SizedBox(height: 5),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    const Text('Total:'),
+                                    Text(
+                                        '₱ ${calculateTotal().toStringAsFixed(2)}',
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold)),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              TextButton(
+                                onPressed: () {
+                                  if (_onTransaction.isEmpty) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Basket is Empty'),
+                                      ),
+                                    );
+                                  } else {
+                                    showDialog(
+                                      context: context,
+                                      builder: (BuildContext context) {
+                                        return AlertDialog(
+                                          title: const Text("Payment"),
+                                          content: TextField(
+                                            controller: _amountPaidController,
+                                            decoration: const InputDecoration(
+                                              hintText: 'Enter Payment',
+                                              prefixIcon: Padding(
+                                                padding: EdgeInsets.all(15),
+                                                child: Text(
+                                                  '₱',
+                                                  style: TextStyle(
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.w400,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            keyboardType: TextInputType.number,
+                                          ),
+                                          actions: <Widget>[
+                                            TextButton(
+                                              onPressed: () {
+                                                // Navigator.push(
+                                                //   context,
+                                                //   MaterialPageRoute(
+                                                //     builder: (_) => const CheckoutReceipt(),
+                                                //   ),
+                                                // );
+
+                                                // Parse the amount paid to a double
+                                                double amountPaid = double.tryParse(
+                                                    _amountPaidController.text) ??
+                                                    0.0;
+
+                                                // Calculate the total
+                                                double total = calculateTotal();
+
+                                                // Check if amount paid is sufficient
+                                                if (amountPaid >= total) {
+                                                  // Proceed with submitting the sales details
+                                                  _addSalesDetails();
+
+                                                  // Add a delay if needed
+                                                  Future.delayed(const Duration(seconds: 2));
+
+                                                  // Add sales headers
+                                                  _addSalesHeaders(
+                                                      calculateSubtotal(),
+                                                      calculateTotalDiscount(),
+                                                      total,
+                                                      amountPaid.toString());
+
+                                                  // Add a delay if needed
+                                                  Future.delayed(const Duration(seconds: 2));
+
+                                                  // Truncate on_transaction table
+                                                  _truncateOnTransaction();
+
+                                                  double change = amountPaid - total;
+
+                                                  showDialog(
+                                                    context: context,
+                                                    barrierDismissible: false,
+                                                    builder: (BuildContext context) {
+                                                      return AlertDialog(
+                                                        title: const Text("Sale Summary"),
+                                                        contentPadding: EdgeInsets.zero,
+                                                        content: SingleChildScrollView(
+                                                          child: Container(
+                                                            padding:
+                                                            const EdgeInsets.all(16.0),
+                                                            child: Column(
+                                                              mainAxisAlignment:
+                                                              MainAxisAlignment.start,
+                                                              crossAxisAlignment:
+                                                              CrossAxisAlignment.start,
+                                                              children: [
+                                                                const SizedBox(height: 5),
+                                                                Row(
+                                                                  mainAxisAlignment:
+                                                                  MainAxisAlignment
+                                                                      .spaceBetween,
+                                                                  children: [
+                                                                    const Text('Subtotal:'),
+                                                                    Text(
+                                                                        '₱ ${calculateSubtotal().toStringAsFixed(2)}',
+                                                                        style: const TextStyle(
+                                                                            fontWeight:
+                                                                            FontWeight
+                                                                                .bold)),
+                                                                  ],
+                                                                ),
+                                                                const SizedBox(height: 5),
+                                                                Row(
+                                                                  mainAxisAlignment:
+                                                                  MainAxisAlignment
+                                                                      .spaceBetween,
+                                                                  children: [
+                                                                    const Text(
+                                                                        'Total Discount:'),
+                                                                    Text(
+                                                                        '- ₱ ${calculateTotalDiscount().toStringAsFixed(2)}',
+                                                                        style: const TextStyle(
+                                                                            fontWeight:
+                                                                            FontWeight
+                                                                                .bold)),
+                                                                  ],
+                                                                ),
+                                                                const SizedBox(height: 5),
+                                                                Row(
+                                                                  mainAxisAlignment:
+                                                                  MainAxisAlignment
+                                                                      .spaceBetween,
+                                                                  children: [
+                                                                    const Text('Total:'),
+                                                                    Text(
+                                                                        '₱ ${total.toStringAsFixed(2)}',
+                                                                        style: const TextStyle(
+                                                                            fontWeight:
+                                                                            FontWeight
+                                                                                .bold)),
+                                                                  ],
+                                                                ),
+                                                                const SizedBox(height: 5),
+                                                                Row(
+                                                                  mainAxisAlignment:
+                                                                  MainAxisAlignment
+                                                                      .spaceBetween,
+                                                                  children: [
+                                                                    const Text(
+                                                                        'Amount received:'),
+                                                                    Text(
+                                                                        '₱ ${amountPaid.toStringAsFixed(2)}',
+                                                                        style: const TextStyle(
+                                                                            fontWeight:
+                                                                            FontWeight
+                                                                                .bold)),
+                                                                  ],
+                                                                ),
+                                                                const SizedBox(height: 5),
+                                                                const Divider(
+                                                                  color: Colors.black,
+                                                                  // You can customize the color
+                                                                  thickness:
+                                                                  1, // You can customize the thickness
+                                                                ),
+                                                                const SizedBox(height: 5),
+                                                                Row(
+                                                                  mainAxisAlignment:
+                                                                  MainAxisAlignment
+                                                                      .spaceBetween,
+                                                                  children: [
+                                                                    const Text('Change:',
+                                                                        style: TextStyle(
+                                                                            fontWeight:
+                                                                            FontWeight
+                                                                                .bold,
+                                                                            fontSize: 16)),
+                                                                    Text(
+                                                                        '₱ ${change.toStringAsFixed(2)}',
+                                                                        style:
+                                                                        const TextStyle(
+                                                                            fontWeight:
+                                                                            FontWeight
+                                                                                .bold,
+                                                                            fontSize:
+                                                                            16)),
+                                                                  ],
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        actions: <Widget>[
+                                                          TextButton(
+                                                            onPressed: () {
+                                                              Navigator.pushReplacement(
+                                                                context,
+                                                                MaterialPageRoute(
+                                                                    builder: (context) =>
+                                                                    const POSMain()), // Replace with your actual Home widget
+                                                              );
+                                                            },
+                                                            child: const Text('Finish'),
+                                                          ),
+                                                        ],
+                                                      );
+                                                    },
+                                                  );
+                                                } else {
+                                                  // Show error message for insufficient payment
+                                                  showDialog(
+                                                    context: context,
+                                                    builder: (BuildContext context) {
+                                                      return AlertDialog(
+                                                        title: const Text("Error"),
+                                                        content: const Text(
+                                                            "Insufficient amount. Please enter a higher amount."),
+                                                        actions: <Widget>[
+                                                          TextButton(
+                                                            onPressed: () {
+                                                              Navigator.of(context).pop();
+                                                            },
+                                                            child: const Text('Close'),
+                                                          ),
+                                                        ],
+                                                      );
+                                                    },
+                                                  );
+                                                }
+                                              },
+                                              child: const Text('Submit'),
+                                            ),
+                                            TextButton(
+                                              onPressed: () {
+                                                Navigator.of(context).pop();
+                                              },
+                                              child: const Text('Close'),
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    );
+                                  }
+                                },
+                                child: const Text('Payment'),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  if (_onTransaction.isEmpty) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Basket is Empty'),
+                                      ),
+                                    );
+                                  } else {
+                                    showDialog(
+                                      context: context,
+                                      builder: (BuildContext context) {
+                                        return AlertDialog(
+                                          title: const Text("Cancel Transaction"),
+                                          content: const Text(
+                                              "Do you want to cancel this Transaction?"),
+                                          actions: <Widget>[
+                                            TextButton(
+                                              onPressed: () {
+                                                // Truncate on_transaction table
+                                                _truncateOnTransaction();
+
+                                                Navigator.pushReplacement(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                      builder: (context) => const POSMain()),
+                                                );
+                                              },
+                                              child: const Text('Yes'),
+                                            ),
+                                            TextButton(
+                                              onPressed: () {
+                                                Navigator.of(context).pop();
+                                              },
+                                              child: const Text('No'),
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    );
+                                  }
+                                },
+                                child: const Text(
+                                  'Cancel Transaction',
+                                  style: TextStyle(color: Colors.redAccent),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 )
               ],
@@ -252,5 +822,37 @@ class _TabletPOSState extends State<TabletPOS> {
         ],
       ),
     );
+  }
+
+  double calculateTotal() {
+    double total = 0.0;
+    for (var transaction in _onTransaction) {
+      total += transaction['total'] as double;
+    }
+    return total;
+  }
+
+  double calculateSubtotal() {
+    double total = 0.0;
+    for (var transaction in _onTransaction) {
+      total += transaction['subtotal'] as double;
+    }
+    return total;
+  }
+
+  double calculateTotalDiscount() {
+    double total = 0.0;
+    for (var transaction in _onTransaction) {
+      total += transaction['discount'] as double;
+    }
+    return total;
+  }
+
+  int calculateQuantity() {
+    int total = 0;
+    for (var transaction in _onTransaction) {
+      total += transaction['ordering_level'] as int;
+    }
+    return total;
   }
 }

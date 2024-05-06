@@ -13,7 +13,8 @@ class PieChartWidgetTablet extends StatefulWidget {
 
 class _PieChartWidgetTabletState extends State<PieChartWidgetTablet> {
   late Future<List<Map<String, dynamic>>> _salesData;
-  late Map<String, Color> _colorMap = {}; // Initialize color map with an empty map
+  late Map<String, Color> _colorMap =
+      {}; // Initialize color map with an empty map
 
   @override
   void initState() {
@@ -23,51 +24,64 @@ class _PieChartWidgetTabletState extends State<PieChartWidgetTablet> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          height: MediaQuery.of(context).size.height * 0.3,
-          child: FutureBuilder<List<Map<String, dynamic>>>(
-            future: _salesData,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              } else if (snapshot.hasError) {
-                return Center(child: Text('Error: ${snapshot.error}'));
-              } else {
-                // Process the retrieved data and update the PieChart
-                final salesData = snapshot.data!;
-                return _buildPieChart(salesData);
-              }
-            },
+    return Container(
+      margin: const EdgeInsets.all(8),
+      padding: const EdgeInsets.all(8.0),
+      decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: Colors.deepPurple)),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          Container(
+            width: MediaQuery.of(context).size.width * 0.4,
+            height: MediaQuery.of(context).size.height * 0.5,
+            child: FutureBuilder<List<Map<String, dynamic>>>(
+              future: _salesData,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                } else {
+                  // Process the retrieved data and update the PieChart
+                  final salesData = snapshot.data!;
+                  return _buildPieChart(salesData);
+                }
+              },
+            ),
           ),
-        ),
 
-        // Label for Pie Chart
-        Container(
-          height: MediaQuery.of(context).size.height * 0.9, // Set a fixed height
-          child: FutureBuilder<List<Map<String, dynamic>>>(
-            future: _salesData,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              } else if (snapshot.hasError) {
-                return Center(child: Text('Error: ${snapshot.error}'));
-              } else {
-                final salesData = snapshot.data!;
-                return ListView.builder(
-                  itemCount: salesData.length,
-                  itemBuilder: (context, index) {
-                    final description = salesData[index]['description'] as String;
-                    final color = _getColorForProduct(description); // Get color from map
-                    return _buildLabel(description, color);
-                  },
-                );
-              }
-            },
+          // Label for Pie Chart
+          Container(
+            height: MediaQuery.of(context).size.height * 0.5,
+            width: MediaQuery.of(context).size.width * 0.3,
+            child: FutureBuilder<List<Map<String, dynamic>>>(
+              future: _salesData,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                } else {
+                  final salesData = snapshot.data!;
+                  return ListView.builder(
+                    itemCount: salesData.length,
+                    itemBuilder: (context, index) {
+                      final description =
+                          salesData[index]['description'] as String;
+                      final color = _getColorForProduct(
+                          description); // Get color from map
+                      return _buildLabel(description, color);
+                    },
+                  );
+                }
+              },
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -107,9 +121,11 @@ class _PieChartWidgetTabletState extends State<PieChartWidgetTablet> {
 
       final section = PieChartSectionData(
         value: count.toDouble(),
-        title: '$count', // Include count in the title
-        showTitle: true, // Show the title
-        radius: 50,
+        title: '$count',
+        // Include count in the title
+        showTitle: true,
+        // Show the title
+        radius: 75,
         color: color,
         titleStyle: const TextStyle(
           fontSize: 16, // Adjust the font size as needed

@@ -20,7 +20,8 @@ class _MobileDailySalesState extends State<MobileDailySales> {
       // Filter sales headers to include only today's sales
       final today = DateTime.now();
       _salesHeaders = data.where((transaction) {
-        var transactionDate = DateTime.fromMillisecondsSinceEpoch(transaction['created_at']);
+        var transactionDate =
+            DateTime.fromMillisecondsSinceEpoch(transaction['created_at']);
         return transactionDate.year == today.year &&
             transactionDate.month == today.month &&
             transactionDate.day == today.day;
@@ -34,7 +35,6 @@ class _MobileDailySalesState extends State<MobileDailySales> {
     super.initState();
     _refreshSalesHeaders();
   }
-
 
   String formatTimestamp(int timestamp) {
     var date = DateTime.fromMillisecondsSinceEpoch(timestamp);
@@ -102,39 +102,33 @@ class _MobileDailySalesState extends State<MobileDailySales> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: Column(
-          children: [
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: SingleChildScrollView(
-                scrollDirection: Axis.vertical,
-                child: DataTable(
-                  columnSpacing: 50,
-                  columns: const [
-                    DataColumn(label: Text('Transaction Code')),
-                    DataColumn(label: Text('Subtotal')),
-                    DataColumn(label: Text('Discount')),
-                    DataColumn(label: Text('Total')),
-                    DataColumn(label: Text('Date and Time')),
-                  ],
-                  rows: _salesHeaders.map((transaction) {
-                    return DataRow(cells: [
-                      DataCell(Text(transaction['transaction_code'].toString()),
-                          onTap: () {
-                        _showSalesDetailsDialog(
-                            transaction['transaction_code']);
-                      }),
-                      DataCell(Text(transaction['subtotal'].toString())),
-                      DataCell(Text(transaction['total_discount'].toString())),
-                      DataCell(Text(transaction['total'].toString())),
-                      DataCell(
-                          Text(formatTimestamp(transaction['created_at']))),
-                    ]);
-                  }).toList(),
-                ),
-              ),
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.vertical,
+            child: DataTable(
+              columnSpacing: 50,
+              columns: const [
+                DataColumn(label: Text('Transaction Code')),
+                DataColumn(label: Text('Subtotal')),
+                DataColumn(label: Text('Discount')),
+                DataColumn(label: Text('Total')),
+                DataColumn(label: Text('Date and Time')),
+              ],
+              rows: _salesHeaders.map((transaction) {
+                return DataRow(cells: [
+                  DataCell(Text(transaction['transaction_code'].toString()),
+                      onTap: () {
+                    _showSalesDetailsDialog(transaction['transaction_code']);
+                  }),
+                  DataCell(Text(transaction['subtotal'].toString())),
+                  DataCell(Text(transaction['total_discount'].toString())),
+                  DataCell(Text(transaction['total'].toString())),
+                  DataCell(Text(formatTimestamp(transaction['created_at']))),
+                ]);
+              }).toList(),
             ),
-          ],
+          ),
         ),
       ),
       // Use SidebarMenu widget as the drawer

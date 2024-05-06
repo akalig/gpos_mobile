@@ -61,7 +61,6 @@ class _MobilePOSCheckoutState extends State<MobilePOSCheckout> {
   /// * ADD SALES HEADERS CLASS **
   Future<void> _addSalesHeaders(double subtotal, double totalDiscount,
       double total, String amountPaid) async {
-
     await SQLHelper.createSalesHeaders(
         subtotal, totalDiscount, total, amountPaid);
   }
@@ -112,7 +111,8 @@ class _MobilePOSCheckoutState extends State<MobilePOSCheckout> {
                         DataCell(
                           Align(
                             alignment: Alignment.centerRight,
-                            child: Text(transaction['sell_price'].toStringAsFixed(2)),
+                            child: Text(
+                                transaction['sell_price'].toStringAsFixed(2)),
                           ),
                         ),
                         DataCell(GestureDetector(
@@ -153,17 +153,17 @@ class _MobilePOSCheckoutState extends State<MobilePOSCheckout> {
                           },
                           child: Align(
                             alignment: Alignment.centerRight,
-                            child: Text(transaction['ordering_level'].toString()),
+                            child:
+                                Text(transaction['ordering_level'].toString()),
                           ),
                         )),
-
                         DataCell(
                           Align(
                             alignment: Alignment.centerRight,
-                            child: Text(transaction['subtotal'].toStringAsFixed(2)),
+                            child: Text(
+                                transaction['subtotal'].toStringAsFixed(2)),
                           ),
                         ),
-
                         DataCell(GestureDetector(
                           onTap: () {
                             showDialog(
@@ -212,18 +212,18 @@ class _MobilePOSCheckoutState extends State<MobilePOSCheckout> {
                           },
                           child: Align(
                             alignment: Alignment.centerRight,
-                            child: Text(transaction['discount'].toStringAsFixed(2)),
+                            child: Text(
+                                transaction['discount'].toStringAsFixed(2)),
                           ),
                         )),
-
                         DataCell(
                           Align(
                             alignment: Alignment.centerRight,
-                            child: Text(transaction['total'].toStringAsFixed(2)),
+                            child:
+                                Text(transaction['total'].toStringAsFixed(2)),
                           ),
                         ),
                       ]);
-
                     }).toList(),
                   ),
                 ),
@@ -238,7 +238,8 @@ class _MobilePOSCheckoutState extends State<MobilePOSCheckout> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text('Subtotal:'),
-                      Text('₱ ${calculateSubtotal().toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                      Text('₱ ${calculateSubtotal().toStringAsFixed(2)}',
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
                     ],
                   ),
                   const SizedBox(height: 5),
@@ -246,7 +247,8 @@ class _MobilePOSCheckoutState extends State<MobilePOSCheckout> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text('Total Discount:'),
-                      Text('₱ ${calculateTotalDiscount().toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                      Text('₱ ${calculateTotalDiscount().toStringAsFixed(2)}',
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
                     ],
                   ),
                   const SizedBox(height: 5),
@@ -254,207 +256,284 @@ class _MobilePOSCheckoutState extends State<MobilePOSCheckout> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text('Total:'),
-                      Text('₱ ${calculateTotal().toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                      Text('₱ ${calculateTotal().toStringAsFixed(2)}',
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
                     ],
                   ),
                 ],
               ),
             ),
-            TextButton(
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return AlertDialog(
-                      title: const Text("Payment"),
-                      content: TextField(
-                        controller: _amountPaidController,
-                        decoration: const InputDecoration(
-                          hintText: 'Enter Payment',
-                          prefixIcon: Padding(
-                            padding: EdgeInsets.all(15),
-                            child: Text(
-                              '₱',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w400,
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextButton(
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: const Text("Payment"),
+                          content: TextField(
+                            controller: _amountPaidController,
+                            decoration: const InputDecoration(
+                              hintText: 'Enter Payment',
+                              prefixIcon: Padding(
+                                padding: EdgeInsets.all(15),
+                                child: Text(
+                                  '₱',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                ),
                               ),
                             ),
+                            keyboardType: TextInputType.number,
                           ),
-                        ),
-                        keyboardType: TextInputType.number,
-                      ),
-                      actions: <Widget>[
-                        TextButton(
-                          onPressed: () {
+                          actions: <Widget>[
+                            TextButton(
+                              onPressed: () {
 
-                            // Navigator.push(
-                            //   context,
-                            //   MaterialPageRoute(
-                            //     builder: (_) => const CheckoutReceipt(),
-                            //   ),
-                            // );
+                                // Navigator.push(
+                                //   context,
+                                //   MaterialPageRoute(
+                                //     builder: (_) => const CheckoutReceipt(),
+                                //   ),
+                                // );
 
-                            // Parse the amount paid to a double
-                            double amountPaid =
-                                double.tryParse(_amountPaidController.text) ??
+                                // Parse the amount paid to a double
+                                double amountPaid = double.tryParse(
+                                        _amountPaidController.text) ??
                                     0.0;
 
-                            // Calculate the total
-                            double total = calculateTotal();
+                                // Calculate the total
+                                double total = calculateTotal();
 
-                            // Check if amount paid is sufficient
-                            if (amountPaid >= total) {
-                              // Proceed with submitting the sales details
-                              _addSalesDetails();
+                                // Check if amount paid is sufficient
+                                if (amountPaid >= total) {
+                                  // Proceed with submitting the sales details
+                                  _addSalesDetails();
 
-                              // Add a delay if needed
-                              Future.delayed(const Duration(seconds: 2));
+                                  // Add a delay if needed
+                                  Future.delayed(const Duration(seconds: 2));
 
-                              // Add sales headers
-                              _addSalesHeaders(
-                                  calculateSubtotal(),
-                                  calculateTotalDiscount(),
-                                  total,
-                                  amountPaid.toString());
+                                  // Add sales headers
+                                  _addSalesHeaders(
+                                      calculateSubtotal(),
+                                      calculateTotalDiscount(),
+                                      total,
+                                      amountPaid.toString());
 
-                              // Add a delay if needed
-                              Future.delayed(const Duration(seconds: 2));
+                                  // Add a delay if needed
+                                  Future.delayed(const Duration(seconds: 2));
 
-                              // Truncate on_transaction table
-                              _truncateOnTransaction();
+                                  // Truncate on_transaction table
+                                  _truncateOnTransaction();
 
-                              double change = amountPaid - total;
+                                  double change = amountPaid - total;
 
-                              showDialog(
-                                context: context,
-                                barrierDismissible: false,
-                                builder: (BuildContext context) {
-                                  return AlertDialog(
-                                    title: const Text("Sale Summary"),
-                                    contentPadding: EdgeInsets.zero,
-                                    content: SingleChildScrollView(
-                                      child: Container(
-                                        padding: const EdgeInsets.all(16.0),
-                                        child: Column(
-                                          mainAxisAlignment: MainAxisAlignment.start,
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            const SizedBox(height: 5),
-
-                                            Row(
-                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  showDialog(
+                                    context: context,
+                                    barrierDismissible: false,
+                                    builder: (BuildContext context) {
+                                      return AlertDialog(
+                                        title: const Text("Sale Summary"),
+                                        contentPadding: EdgeInsets.zero,
+                                        content: SingleChildScrollView(
+                                          child: Container(
+                                            padding: const EdgeInsets.all(16.0),
+                                            child: Column(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.start,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
                                               children: [
-                                                const Text('Subtotal:'),
-                                                Text('₱ ${calculateSubtotal().toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                                                const SizedBox(height: 5),
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
+                                                  children: [
+                                                    const Text('Subtotal:'),
+                                                    Text(
+                                                        '₱ ${calculateSubtotal().toStringAsFixed(2)}',
+                                                        style: const TextStyle(
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold)),
+                                                  ],
+                                                ),
+                                                const SizedBox(height: 5),
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
+                                                  children: [
+                                                    const Text(
+                                                        'Total Discount:'),
+                                                    Text(
+                                                        '- ₱ ${calculateTotalDiscount().toStringAsFixed(2)}',
+                                                        style: const TextStyle(
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold)),
+                                                  ],
+                                                ),
+                                                const SizedBox(height: 5),
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
+                                                  children: [
+                                                    const Text('Total:'),
+                                                    Text(
+                                                        '₱ ${total.toStringAsFixed(2)}',
+                                                        style: const TextStyle(
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold)),
+                                                  ],
+                                                ),
+                                                const SizedBox(height: 5),
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
+                                                  children: [
+                                                    const Text(
+                                                        'Amount received:'),
+                                                    Text(
+                                                        '₱ ${amountPaid.toStringAsFixed(2)}',
+                                                        style: const TextStyle(
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold)),
+                                                  ],
+                                                ),
+                                                const SizedBox(height: 5),
+                                                const Divider(
+                                                  color: Colors.black,
+                                                  // You can customize the color
+                                                  thickness:
+                                                      1, // You can customize the thickness
+                                                ),
+                                                const SizedBox(height: 5),
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
+                                                  children: [
+                                                    const Text('Change:',
+                                                        style: TextStyle(
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            fontSize: 16)),
+                                                    Text(
+                                                        '₱ ${change.toStringAsFixed(2)}',
+                                                        style: const TextStyle(
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            fontSize: 16)),
+                                                  ],
+                                                ),
                                               ],
                                             ),
-
-                                            const SizedBox(height: 5),
-
-                                            Row(
-                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                              children: [
-                                                const Text('Total Discount:'),
-                                                Text('- ₱ ${calculateTotalDiscount().toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold)),
-                                              ],
-                                            ),
-
-                                            const SizedBox(height: 5),
-
-                                            Row(
-                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                              children: [
-                                                const Text('Total:'),
-                                                Text('₱ ${total.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold)),
-                                              ],
-                                            ),
-
-                                            const SizedBox(height: 5),
-
-                                            Row(
-                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                              children: [
-                                                const Text('Amount received:'),
-                                                Text('₱ ${amountPaid.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold)),
-                                              ],
-                                            ),
-
-                                            const SizedBox(height: 5),
-
-                                            const Divider(
-                                              color: Colors.black, // You can customize the color
-                                              thickness: 1, // You can customize the thickness
-                                            ),
-
-                                            const SizedBox(height: 5),
-
-                                            Row(
-                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                              children: [
-                                                const Text('Change:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                                                Text('₱ ${change.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                                              ],
-                                            ),
-
-                                          ],
+                                          ),
                                         ),
-                                      ),
-                                    ),
-                                    actions: <Widget>[
-                                      TextButton(
-                                        onPressed: () {
-                                          Navigator.pushReplacement(
-                                            context,
-                                            MaterialPageRoute(
-                                                builder: (context) =>
-                                                const POSMain()), // Replace with your actual Home widget
-                                          );
-                                        },
-                                        child: const Text('Finish'),
-                                      ),
-                                    ],
+                                        actions: <Widget>[
+                                          TextButton(
+                                            onPressed: () {
+                                              Navigator.pushReplacement(
+                                                context,
+                                                MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        const POSMain()), // Replace with your actual Home widget
+                                              );
+                                            },
+                                            child: const Text('Finish'),
+                                          ),
+                                        ],
+                                      );
+                                    },
                                   );
-                                },
-                              );
-
-
-                            } else {
-                              // Show error message for insufficient payment
-                              showDialog(
-                                context: context,
-                                builder: (BuildContext context) {
-                                  return AlertDialog(
-                                    title: const Text("Error"),
-                                    content: const Text(
-                                        "Insufficient amount. Please enter a higher amount."),
-                                    actions: <Widget>[
-                                      TextButton(
-                                        onPressed: () {
-                                          Navigator.of(context).pop();
-                                        },
-                                        child: const Text('Close'),
-                                      ),
-                                    ],
+                                } else {
+                                  // Show error message for insufficient payment
+                                  showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return AlertDialog(
+                                        title: const Text("Error"),
+                                        content: const Text(
+                                            "Insufficient amount. Please enter a higher amount."),
+                                        actions: <Widget>[
+                                          TextButton(
+                                            onPressed: () {
+                                              Navigator.of(context).pop();
+                                            },
+                                            child: const Text('Close'),
+                                          ),
+                                        ],
+                                      );
+                                    },
                                   );
-                                },
-                              );
-                            }
-                          },
-                          child: const Text('Submit'),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                          child: const Text('Close'),
-                        ),
-                      ],
+                                }
+                              },
+                              child: const Text('Submit'),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                              child: const Text('Close'),
+                            ),
+                          ],
+                        );
+                      },
                     );
                   },
-                );
-              },
-              child: const Text('Payment'),
+                  child: const Text('Payment'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: const Text("Cancel Transaction"),
+                          content: const Text(
+                              "Do you want to cancel this Transaction?"),
+                          actions: <Widget>[
+                            TextButton(
+                              onPressed: () {
+                                // Truncate on_transaction table
+                                _truncateOnTransaction();
+
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          const POSMain()),
+                                );
+                              },
+                              child: const Text('Yes'),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                              child: const Text('No'),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                  child: const Text(
+                    'Cancel Transaction',
+                    style: TextStyle(color: Colors.redAccent),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

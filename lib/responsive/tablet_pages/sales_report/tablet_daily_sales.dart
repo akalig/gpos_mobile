@@ -118,23 +118,23 @@ class _TabletDashboardState extends State<TabletDailySales> {
               children: [
                 // First column
                 Expanded(
-                  child: Column(
-                    children: [
-                      // youtube video
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: AspectRatio(
-                          aspectRatio: 120 / 9,
-                          child: Container(
-                            color: Colors.deepPurple[200],
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.vertical,
+                    child: Column(
+                      children: [
+                        // youtube video
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: AspectRatio(
+                            aspectRatio: 120 / 9,
+                            child: Container(
+                              color: Colors.deepPurple[200],
+                            ),
                           ),
                         ),
-                      ),
 
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: SingleChildScrollView(
-                          scrollDirection: Axis.vertical,
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
                           child: DataTable(
                             columnSpacing: 50,
                             columns: const [
@@ -146,23 +146,25 @@ class _TabletDashboardState extends State<TabletDailySales> {
                             ],
                             rows: _salesHeaders.map((transaction) {
                               return DataRow(cells: [
-                                DataCell(Text(transaction['transaction_code'].toString()),
-                                    onTap: () {
-                                      _showSalesDetailsDialog(
-                                          transaction['transaction_code']);
-                                    }),
-                                DataCell(Text(transaction['subtotal'].toString())),
-                                DataCell(Text(transaction['total_discount'].toString())),
-                                DataCell(Text(transaction['total'].toString())),
                                 DataCell(
-                                    Text(formatTimestamp(transaction['created_at']))),
+                                    Text(transaction['transaction_code']
+                                        .toString()), onTap: () {
+                                  _showSalesDetailsDialog(
+                                      transaction['transaction_code']);
+                                }),
+                                DataCell(
+                                    Text(transaction['subtotal'].toString())),
+                                DataCell(Text(
+                                    transaction['total_discount'].toString())),
+                                DataCell(Text(transaction['total'].toString())),
+                                DataCell(Text(formatTimestamp(
+                                    transaction['created_at']))),
                               ]);
                             }).toList(),
                           ),
                         ),
-                      ),
-
-                    ],
+                      ],
+                    ),
                   ),
                 ),
 
