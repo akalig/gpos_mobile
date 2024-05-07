@@ -214,81 +214,158 @@ class _TabletPOSState extends State<TabletPOS> {
                           ),
                           itemCount: _productsDetails.length,
                           itemBuilder: (context, index) {
-                            return GestureDetector(
-                              onTap: () {
-                                _addOnTransaction(
-                                    _productsDetails[index]['product_code'],
-                                    _productsDetails[index]['description'],
-                                    _productsDetails[index]['sell_price']);
-                              },
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Container(
-                                  foregroundDecoration: const BoxDecoration(
-                                    color: Colors.grey,
-                                    backgroundBlendMode: BlendMode.saturation,
-                                  ),
-                                  color: Colors.deepPurple[300],
-                                  height: 80,
-                                  width: 80,
-                                  child: Stack(
-                                    children: [
-                                      if (_productsDetails[index]['image'] !=
-                                              null &&
-                                          (_productsDetails[index]['image']
-                                                  as Uint8List)
-                                              .isNotEmpty)
-                                        Image.memory(
-                                          _productsDetails[index]['image'],
-                                          // No need for null check, already checked
-                                          fit: BoxFit.cover,
+
+                            if (_productsDetails[index]['ordering_level'].toString() == '0') {
+
+                              return GestureDetector(
+                                onTap: () {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Product is out of Stock'),
+                                    ),
+                                  );
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Container(
+                                    foregroundDecoration: const BoxDecoration(
+                                      color: Colors.grey,
+                                      backgroundBlendMode: BlendMode.saturation,
+                                    ),
+                                    color: Colors.deepPurple[300],
+                                    height: 80,
+                                    width: 80,
+                                    child: Stack(
+                                      children: [
+                                        if (_productsDetails[index]['image'] !=
+                                            null &&
+                                            (_productsDetails[index]['image']
+                                            as Uint8List)
+                                                .isNotEmpty)
+                                          Image.memory(
+                                            _productsDetails[index]['image'],
+                                            // No need for null check, already checked
+                                            fit: BoxFit.cover,
+                                            height: double.infinity,
+                                            width: double.infinity,
+                                          ),
+                                        Container(
+                                          color: Colors.black.withOpacity(0.5),
                                           height: double.infinity,
                                           width: double.infinity,
                                         ),
-                                      Container(
-                                        color: Colors.black.withOpacity(0.5),
-                                        height: double.infinity,
-                                        width: double.infinity,
-                                      ),
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.end,
-                                        children: [
-                                          Padding(
-                                            padding: const EdgeInsets.only(
-                                                left: 8.0),
-                                            child: Text(
-                                              _productsDetails[index]
-                                                  ['description'],
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 14.0,
-                                                fontWeight: FontWeight.bold,
+                                        Column(
+                                          crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                          mainAxisAlignment:
+                                          MainAxisAlignment.end,
+                                          children: [
+                                            Padding(
+                                              padding: const EdgeInsets.only(
+                                                  left: 8.0),
+                                              child: Text(
+                                                _productsDetails[index]
+                                                ['description'],
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 14.0,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
                                               ),
                                             ),
-                                          ),
-                                          const SizedBox(height: 1),
-                                          Padding(
-                                            padding: const EdgeInsets.only(
-                                                left: 8.0),
-                                            child: Text(
-                                              'Price: ₱${_productsDetails[index]['sell_price'].toString()}',
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 12.0,
+                                            const SizedBox(height: 1),
+                                            const Padding(
+                                              padding: EdgeInsets.only(
+                                                  left: 8.0),
+                                              child: Text(
+                                                'Out of Stock',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 12.0,
+                                                ),
                                               ),
                                             ),
-                                          ),
-                                          const SizedBox(height: 3),
-                                        ],
-                                      ),
-                                    ],
+                                            const SizedBox(height: 3),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
-                              ),
-                            );
+                              );
+                            } else {
+                              return GestureDetector(
+                                onTap: () {
+                                  _addOnTransaction(
+                                      _productsDetails[index]['product_code'],
+                                      _productsDetails[index]['description'],
+                                      _productsDetails[index]['sell_price']);
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Container(
+                                    color: Colors.deepPurple[300],
+                                    height: 80,
+                                    width: 80,
+                                    child: Stack(
+                                      children: [
+                                        if (_productsDetails[index]['image'] !=
+                                            null &&
+                                            (_productsDetails[index]['image']
+                                            as Uint8List)
+                                                .isNotEmpty)
+                                          Image.memory(
+                                            _productsDetails[index]['image'],
+                                            // No need for null check, already checked
+                                            fit: BoxFit.cover,
+                                            height: double.infinity,
+                                            width: double.infinity,
+                                          ),
+                                        Container(
+                                          color: Colors.black.withOpacity(0.5),
+                                          height: double.infinity,
+                                          width: double.infinity,
+                                        ),
+                                        Column(
+                                          crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                          mainAxisAlignment:
+                                          MainAxisAlignment.end,
+                                          children: [
+                                            Padding(
+                                              padding: const EdgeInsets.only(
+                                                  left: 8.0),
+                                              child: Text(
+                                                _productsDetails[index]
+                                                ['description'],
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 14.0,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 1),
+                                            Padding(
+                                              padding: const EdgeInsets.only(
+                                                  left: 8.0),
+                                              child: Text(
+                                                'Price: ₱${_productsDetails[index]['sell_price'].toString()}',
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 12.0,
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 3),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }
                           },
                         ),
                       ),
