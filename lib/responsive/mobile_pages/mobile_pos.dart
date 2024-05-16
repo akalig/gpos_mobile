@@ -16,6 +16,8 @@ class _MobilePOSState extends State<MobilePOS> {
   List<Map<String, dynamic>> _onTransaction = [];
   List<Map<String, dynamic>> _salesHeaders = [];
   bool _isLoading = true;
+  SQLHelper _sqlHelper = SQLHelper();
+  TextEditingController _searchController = TextEditingController();
 
   void _refreshProductsDetails() async {
     final data = await SQLHelper.getProductsDetails();
@@ -58,6 +60,20 @@ class _MobilePOSState extends State<MobilePOS> {
     _refreshProductsDetails();
     _refreshOnTransaction();
     _refreshSalesHeaders();
+  }
+
+  void _performSearch(String searchTerm) async {
+    final results = await _sqlHelper
+        .searchProducts(searchTerm); // Call the method using the instance
+    setState(() {
+      _productsDetails = results;
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
@@ -104,18 +120,24 @@ class _MobilePOSState extends State<MobilePOS> {
                               ],
                               rows: _salesHeaders.map((transaction) {
                                 return DataRow(cells: [
-                                  DataCell(Text(transaction['transaction_code'].toString())),
-                                  DataCell(Text(transaction['subtotal'].toString())),
-                                  DataCell(Text(transaction['total_discount'].toString())),
-                                  DataCell(Text(transaction['total'].toString())),
-                                  DataCell(Text(transaction['created_at'].toString())),
+                                  DataCell(Text(transaction['transaction_code']
+                                      .toString())),
+                                  DataCell(
+                                      Text(transaction['subtotal'].toString())),
+                                  DataCell(Text(transaction['total_discount']
+                                      .toString())),
+                                  DataCell(
+                                      Text(transaction['total'].toString())),
+                                  DataCell(Text(
+                                      transaction['created_at'].toString())),
                                   DataCell(
                                     Padding(
                                       padding: const EdgeInsets.all(8.0),
                                       child: Container(
                                         decoration: BoxDecoration(
                                           color: Colors.red,
-                                          borderRadius: BorderRadius.circular(5.0),
+                                          borderRadius:
+                                              BorderRadius.circular(5.0),
                                         ),
                                         child: ElevatedButton(
                                           onPressed: () {
@@ -126,7 +148,8 @@ class _MobilePOSState extends State<MobilePOS> {
                                             backgroundColor: Colors.red,
                                             // text color
                                             shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(8.0),
+                                              borderRadius:
+                                                  BorderRadius.circular(8.0),
                                             ),
                                           ),
                                           child: const Text('Void'),
@@ -155,7 +178,6 @@ class _MobilePOSState extends State<MobilePOS> {
             },
           ),
         ],
-
       ),
 
       body: Padding(
@@ -172,6 +194,52 @@ class _MobilePOSState extends State<MobilePOS> {
               ),
             ),
 
+            Row(
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.black54),
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 8.0),
+                              child: TextField(
+                                controller: _searchController,
+                                decoration: const InputDecoration(
+                                  hintText: 'Search',
+                                  border: InputBorder.none,
+                                  hintStyle: TextStyle(color: Colors.black54),
+                                ),
+                              ),
+                            ),
+                          ),
+                          InkWell(
+                            onTap: () {
+                              _performSearch(_searchController.text);
+                            },
+                            child: const Padding(
+                              padding: EdgeInsets.all(8.0),
+                              child: Icon(
+                                Icons.search,
+                                color: Colors.deepPurple,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
             // comment section & recommended videos
             /*** PRODUCT DETAILS LIST ***/
             Expanded(
@@ -183,70 +251,161 @@ class _MobilePOSState extends State<MobilePOS> {
                 ),
                 itemCount: _productsDetails.length,
                 itemBuilder: (context, index) {
-                  return GestureDetector(
-                    onTap: () {
-                      _addOnTransaction(
-                          _productsDetails[index]['product_code'],
-                          _productsDetails[index]['description'],
-                          _productsDetails[index]['sell_price']);
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Container(
-                        color: Colors.deepPurple[300],
-                        height: 80,
-                        width: 80,
-                        child: Stack(
-                          children: [
-                            if (_productsDetails[index]['image'] != null &&
-                                (_productsDetails[index]['image'] as Uint8List)
-                                    .isNotEmpty)
-                              Image.memory(
-                                _productsDetails[index]['image'],
-                                // No need for null check, already checked
-                                fit: BoxFit.cover,
+                  if (_productsDetails[index]['ordering_level'] <= 0) {
+                    return GestureDetector(
+                      onTap: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Product is out of Stock'),
+                          ),
+                        );
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Container(
+                          foregroundDecoration: const BoxDecoration(
+                            color: Colors.grey,
+                            backgroundBlendMode: BlendMode.saturation,
+                          ),
+                          color: Colors.deepPurple[300],
+                          height: 80,
+                          width: 80,
+                          child: Stack(
+                            children: [
+                              if (_productsDetails[index]['image'] != null &&
+                                  (_productsDetails[index]['image']
+                                          as Uint8List)
+                                      .isNotEmpty)
+                                Image.memory(
+                                  _productsDetails[index]['image'],
+                                  // No need for null check, already checked
+                                  fit: BoxFit.cover,
+                                  height: double.infinity,
+                                  width: double.infinity,
+                                ),
+                              Container(
+                                color: Colors.black.withOpacity(0.5),
                                 height: double.infinity,
                                 width: double.infinity,
                               ),
-                            Container(
-                              color: Colors.black.withOpacity(0.5),
-                              height: double.infinity,
-                              width: double.infinity,
-                            ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.only(left: 8.0),
-                                  child: Text(
-                                    _productsDetails[index]['description'],
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 14.0,
-                                      fontWeight: FontWeight.bold,
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 8.0),
+                                    child: Text(
+                                      _productsDetails[index]['description'],
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 14.0,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                const SizedBox(height: 1),
-                                Padding(
-                                  padding: const EdgeInsets.only(left: 8.0),
-                                  child: Text(
-                                    'Price: ₱${_productsDetails[index]['sell_price'].toString()}',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12.0,
+                                  const SizedBox(height: 1),
+                                  const Padding(
+                                    padding: EdgeInsets.only(left: 8.0),
+                                    child: Text(
+                                      'Out of Stock',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12.0,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                const SizedBox(height: 3),
-                              ],
-                            ),
-                          ],
+                                  const SizedBox(height: 3),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  );
+                    );
+                  } else {
+                    return GestureDetector(
+                      // Inside GridView.builder's itemBuilder function
+                      onTap: () {
+                        final productDetails = _productsDetails[index];
+                        final transactionIndex = _onTransaction.indexWhere((transaction) =>
+                        transaction['product_code'] == productDetails['product_code']);
+
+                        if (transactionIndex != -1 &&
+                            _onTransaction[transactionIndex]['ordering_level'] >=
+                                productDetails['ordering_level']) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('You exceed the quantity of the Product'),
+                            ),
+                          );
+                        } else {
+                          _addOnTransaction(
+                              productDetails['product_code'],
+                              productDetails['description'],
+                              productDetails['sell_price']
+                          );
+                        }
+                      },
+
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Container(
+                          color: Colors.deepPurple[300],
+                          height: 80,
+                          width: 80,
+                          child: Stack(
+                            children: [
+                              if (_productsDetails[index]['image'] != null &&
+                                  (_productsDetails[index]['image']
+                                          as Uint8List)
+                                      .isNotEmpty)
+                                Image.memory(
+                                  _productsDetails[index]['image'],
+                                  // No need for null check, already checked
+                                  fit: BoxFit.cover,
+                                  height: double.infinity,
+                                  width: double.infinity,
+                                ),
+                              Container(
+                                color: Colors.black.withOpacity(0.5),
+                                height: double.infinity,
+                                width: double.infinity,
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 8.0),
+                                    child: Text(
+                                      _productsDetails[index]['description'],
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 14.0,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 1),
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 8.0),
+                                    child: Text(
+                                      'Price: ₱${_productsDetails[index]['sell_price'].toString()}',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12.0,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 3),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }
                 },
               ),
             ),
@@ -254,7 +413,6 @@ class _MobilePOSState extends State<MobilePOS> {
             Visibility(
               visible: _onTransaction.isNotEmpty,
               child: GestureDetector(
-
                 onTap: () {
                   Navigator.push(
                     context,
@@ -262,7 +420,6 @@ class _MobilePOSState extends State<MobilePOS> {
                         builder: (context) => const MobilePOSCheckout()),
                   );
                 },
-
                 child: Container(
                   height: 40,
                   padding: const EdgeInsets.all(5),

@@ -7,6 +7,26 @@ class SQLHelper {
   /** -------------------------------CREATE TABLES------------------------------------------- **/
   /** --------------------------------------------------------------------------------------- **/
 
+  /// * Create User Account Table *
+  static Future<void> createUserAccountTable(sql.Database database) async {
+    await database.execute("""CREATE TABLE users(
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      company_name TEXT,
+      company_address TEXT,
+      company_type TEXT,
+      first_name TEXT,
+      middle_name TEXT,
+      last_name TEXT,
+      suffix_name TEXT,
+      contact_number TEXT,
+      username TEXT,
+      password TEXT,
+      user_type TEXT,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )""");
+    print("...creating a product types table");
+  }
+
   /// * Create Product Types Table *
   static Future<void> createProductTypesTable(sql.Database database) async {
     await database.execute("""CREATE TABLE product_types(
@@ -103,7 +123,6 @@ class SQLHelper {
     print("...creating a Sales headers table");
   }
 
-
   static Future<sql.Database> db() async {
     return sql.openDatabase(
       'gposmobile.db',
@@ -115,8 +134,44 @@ class SQLHelper {
         await createOnTransactionTable(database);
         await createSalesDetailsTable(database);
         await createSalesHeadersTable(database);
+        await createUserAccountTable(database);
       },
     );
+  }
+
+  /** --------------------------------------------------------------------------------------- **/
+  /** -------------------------------USER ACCOUNT TYPES-------------------------------------- **/
+  /** --------------------------------------------------------------------------------------- **/
+
+  /// * Create Product Types *
+  static Future<int> createUserAccount(
+      String companyName,
+      String companyAddress,
+      String companyType,
+      String firstName,
+      String middleName,
+      String lastName,
+      String suffixName,
+      String username,
+      String password,
+      String userType) async {
+    final db = await SQLHelper.db();
+
+    final data = {
+      'company_name': companyName,
+      'company_address': companyAddress,
+      'company_type': companyType,
+      'first_name': firstName,
+      'middle_name': middleName,
+      'last_name': lastName,
+      'suffix_name': suffixName,
+      'username': username,
+      'password': password,
+      'user_type': userType,
+    };
+    final id = await db.insert('users', data,
+        conflictAlgorithm: sql.ConflictAlgorithm.replace);
+    return id;
   }
 
   /** --------------------------------------------------------------------------------------- **/
@@ -366,6 +421,13 @@ class SQLHelper {
     }
   }
 
+  Future<List<Map<String, dynamic>>> searchProducts(String searchTerm) async {
+    final db = await SQLHelper.db();
+    final List<Map<String, dynamic>> result = await db.rawQuery(
+        "SELECT * FROM products WHERE description LIKE '%$searchTerm%' OR search_code LIKE '%$searchTerm%'");
+    return result;
+  }
+
   /** --------------------------------------------------------------------------------------- **/
   /** -------------------------------ON TRANSACTION QUERIES---------------------------------- **/
   /** --------------------------------------------------------------------------------------- **/
@@ -490,15 +552,16 @@ class SQLHelper {
   /** --------------------------------------------------------------------------------------- **/
 
   /// * Create Sales Headers *
-  static Future<void> createSalesHeaders(double subtotal, double totalDiscount, double total, String stAmountPaid) async {
+  static Future<void> createSalesHeaders(double subtotal, double totalDiscount,
+      double total, String stAmountPaid) async {
     final db = await SQLHelper.db();
 
     double amountPaid = double.parse(stAmountPaid);
 
     double change = amountPaid - total;
 
-    // Get the current timestamp
-    int currentTime = DateTime.now().millisecondsSinceEpoch;
+    // Get the current timestamp as a formatted date string
+    String createdAt = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
     // Get the next available transaction_code for sales_details
     List<Map<String, dynamic>> salesHeaders = await getSalesCount();
@@ -518,10 +581,11 @@ class SQLHelper {
       'amount_paid': amountPaid,
       'change': change,
       'status': 'done',
-      'created_at': currentTime,
+      'created_at': createdAt, // Store createdAt as a formatted date string
     };
 
-    await db.insert('sales_headers', data, conflictAlgorithm: sql.ConflictAlgorithm.replace);
+    await db.insert('sales_headers', data,
+        conflictAlgorithm: sql.ConflictAlgorithm.replace);
   }
 
   /// * Get Sales Headers Count *
@@ -553,7 +617,8 @@ class SQLHelper {
     ''');
   }
 
-  static Future<List<Map<String, dynamic>>> getDailySalesAndTransactionData() async {
+  static Future<List<Map<String, dynamic>>>
+      getDailySalesAndTransactionData() async {
     final db = await SQLHelper.db();
     final todayFormatted = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
@@ -569,7 +634,6 @@ class SQLHelper {
     return results;
   }
 
-
   /** --------------------------------------------------------------------------------------- **/
   /** -------------------------------SALES DETAILS QUERIES----------------------------------- **/
   /** --------------------------------------------------------------------------------------- **/
@@ -579,10 +643,11 @@ class SQLHelper {
     final db = await SQLHelper.db();
 
     // Get all data from on_transaction table
-    List<Map<String, dynamic>> onTransactionData = await db.query('on_transaction');
+    List<Map<String, dynamic>> onTransactionData =
+        await db.query('on_transaction');
 
-    // Get the current timestamp
-    int currentTime = DateTime.now().millisecondsSinceEpoch;
+    // Get the current timestamp as a formatted date string
+    String createdAt = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
     // Get the next available transaction_code for sales_details
     List<Map<String, dynamic>> salesDetails = await getSalesDetailsCount();
@@ -606,11 +671,16 @@ class SQLHelper {
         'ordering_level': transaction['ordering_level'],
         'subtotal': transaction['subtotal'],
         'total': transaction['total'],
-        'created_at': currentTime,
+        'created_at': createdAt,
       };
 
       // Insert data into sales_details table
       await db.insert('sales_details', data);
+
+      // Subtract ordering_level from products table
+      await db.execute(
+          'UPDATE products SET ordering_level = ordering_level - ? WHERE product_code = ?',
+          [transaction['ordering_level'], transaction['product_code']]);
     }
   }
 
@@ -627,21 +697,33 @@ class SQLHelper {
   }
 
   /// * Get Sales Details by Transaction Code *
-  static Future<List<Map<String, dynamic>>> getSalesDetailsByTransactionCode(int transactionCode) async {
+  static Future<List<Map<String, dynamic>>> getSalesDetailsByTransactionCode(
+      int transactionCode) async {
     final db = await SQLHelper.db();
-    return db.query('sales_details', where: "transaction_code = ?", whereArgs: [transactionCode]);
+    return db.query('sales_details',
+        where: "transaction_code = ?", whereArgs: [transactionCode]);
   }
 
   /// * get Sales Product Count With Description for Pie Chart*
-  static Future<List<Map<String, dynamic>>> getSalesProductCountWithDescription() async {
+  static Future<List<Map<String, dynamic>>>
+      getSalesProductCountWithDescription() async {
     final db = await SQLHelper.db();
+    final todayFormatted = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+    //   return db.rawQuery('''
+    //   SELECT p.description, s.product_code, COUNT(s.ordering_level) as count
+    //   FROM sales_details s
+    //   INNER JOIN products p ON s.product_code = p.product_code
+    //   WHERE date(s.created_at) = '$todayFormatted'
+    //   GROUP BY s.product_code
+    // ''');
+
     return db.rawQuery('''
-    SELECT p.description, s.product_code, COUNT(s.ordering_level) as count
-    FROM sales_details s
-    INNER JOIN products p ON s.product_code = p.product_code
-    GROUP BY s.product_code
+    SELECT description, SUM(ordering_level) AS count
+    FROM sales_details
+    WHERE created_at = '$todayFormatted'
+    GROUP BY description;
+
   ''');
   }
-
-
 }

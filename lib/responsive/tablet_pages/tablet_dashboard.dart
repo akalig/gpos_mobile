@@ -17,8 +17,8 @@ class _TabletDashboardState extends State<TabletDashboard> {
   List<Map<String, dynamic>> _dailySalesData = [];
   bool _isLoading = true;
 
-  void _refreshSalesHeaders() async {
-    final data = await SQLHelper.getSalesHeaders();
+  void _refreshDailySalesAndTransactionData() async {
+    final data = await SQLHelper.getDailySalesAndTransactionData();
     setState(() {
       _dailySalesData = data;
       _isLoading = false;
@@ -29,7 +29,7 @@ class _TabletDashboardState extends State<TabletDashboard> {
   void initState() {
     super.initState();
     _scaffoldKey = GlobalKey<ScaffoldState>();
-    _refreshSalesHeaders();
+    _refreshDailySalesAndTransactionData();
   }
 
   void _toggleDrawer() {
@@ -64,122 +64,128 @@ class _TabletDashboardState extends State<TabletDashboard> {
               children: [
                 // First column
                 Expanded(
-                  child: Column(
-                    children: [
-                      SingleChildScrollView(
-                        scrollDirection: Axis.vertical,
-                        child: Padding(
-                          padding: const EdgeInsets.all(0.0),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Row(
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.vertical,
+                    child: Padding(
+                      padding: const EdgeInsets.all(1.0),
+                      child: Column(
+                        children: [
+                          SingleChildScrollView(
+                            scrollDirection: Axis.vertical,
+                            child: Padding(
+                              padding: const EdgeInsets.all(0.0),
+                              child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Expanded(
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        color: Colors.blue,
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      margin: const EdgeInsets.all(8),
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Column(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          const Text(
-                                            'Total Sales',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.bold,
-                                            ),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Expanded(
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            color: Colors.blue,
+                                            borderRadius: BorderRadius.circular(10),
                                           ),
-                                          FutureBuilder<List<Map<String, dynamic>>>(
-                                            future: Future.value(_dailySalesData),
-                                            builder: (context, snapshot) {
-                                              if (snapshot.connectionState == ConnectionState.waiting) {
-                                                return const CircularProgressIndicator(color: Colors.white);
-                                              } else if (snapshot.hasError) {
-                                                return Text(
-                                                  'Error: ${snapshot.error}',
-                                                  style: const TextStyle(color: Colors.white),
-                                                );
-                                              } else {
-                                                final data = snapshot.data!;
-                                                final totalSales = data.isNotEmpty ? data.first['total_sales'] ?? 0 : 0; // Corrected column name
-                                                return Text(
-                                                  '\₱$totalSales',
-                                                  style: const TextStyle(
-                                                    color: Colors.white,
-                                                    fontSize: 15,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                );
-                                              }
-                                            },
-                                          ),
+                                          margin: const EdgeInsets.all(8),
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Column(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              const Text(
+                                                'Total Sales',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                              FutureBuilder<List<Map<String, dynamic>>>(
+                                                future: Future.value(_dailySalesData),
+                                                builder: (context, snapshot) {
+                                                  if (snapshot.connectionState == ConnectionState.waiting) {
+                                                    return const CircularProgressIndicator(color: Colors.white);
+                                                  } else if (snapshot.hasError) {
+                                                    return Text(
+                                                      'Error: ${snapshot.error}',
+                                                      style: const TextStyle(color: Colors.white),
+                                                    );
+                                                  } else {
+                                                    final data = snapshot.data!;
+                                                    final totalSales = data.isNotEmpty ? (data.first['total_sales'] ?? 0).toStringAsFixed(2) : '0.00';
+                                                    return Text(
+                                                      '\₱$totalSales',
+                                                      style: const TextStyle(
+                                                        color: Colors.white,
+                                                        fontSize: 15,
+                                                        fontWeight: FontWeight.bold,
+                                                      ),
+                                                    );
+                                                  }
+                                                },
+                                              ),
 
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        color: Colors.green,
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      margin: const EdgeInsets.all(8),
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Column(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          const Text(
-                                            'Total Transactions',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.bold,
-                                            ),
+                                            ],
                                           ),
-                                          FutureBuilder<List<Map<String, dynamic>>>(
-                                            future: Future.value(_dailySalesData),
-                                            builder: (context, snapshot) {
-                                              if (snapshot.connectionState == ConnectionState.waiting) {
-                                                return const CircularProgressIndicator(color: Colors.white);
-                                              } else if (snapshot.hasError) {
-                                                return Text(
-                                                  'Error: ${snapshot.error}',
-                                                  style: const TextStyle(color: Colors.white),
-                                                );
-                                              } else {
-                                                final data = snapshot.data!;
-                                                final totalTransactions = data.isNotEmpty ? data.first['transactions_count'] ?? 0 : 0; // Corrected column name
-                                                return Text(
-                                                  '$totalTransactions',
-                                                  style: const TextStyle(
-                                                    color: Colors.white,
-                                                    fontSize: 15,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                );
-                                              }
-                                            },
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            color: Colors.green,
+                                            borderRadius: BorderRadius.circular(10),
                                           ),
+                                          margin: const EdgeInsets.all(8),
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Column(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              const Text(
+                                                'Total Transactions',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                              FutureBuilder<List<Map<String, dynamic>>>(
+                                                future: Future.value(_dailySalesData),
+                                                builder: (context, snapshot) {
+                                                  if (snapshot.connectionState == ConnectionState.waiting) {
+                                                    return const CircularProgressIndicator(color: Colors.white);
+                                                  } else if (snapshot.hasError) {
+                                                    return Text(
+                                                      'Error: ${snapshot.error}',
+                                                      style: const TextStyle(color: Colors.white),
+                                                    );
+                                                  } else {
+                                                    final data = snapshot.data!;
+                                                    final totalTransactions = data.isNotEmpty ? data.first['transactions_count'] ?? 0 : 0; // Corrected column name
+                                                    return Text(
+                                                      '$totalTransactions',
+                                                      style: const TextStyle(
+                                                        color: Colors.white,
+                                                        fontSize: 15,
+                                                        fontWeight: FontWeight.bold,
+                                                      ),
+                                                    );
+                                                  }
+                                                },
+                                              ),
 
-                                        ],
+                                            ],
+                                          ),
+                                        ),
                                       ),
-                                    ),
+                                    ],
                                   ),
+                                  const PieChartWidgetTablet(),
                                 ],
                               ),
-                              const PieChartWidgetTablet(),
-                            ],
+                            ),
                           ),
-                        ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
 

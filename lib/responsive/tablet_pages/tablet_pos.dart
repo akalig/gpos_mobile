@@ -28,6 +28,8 @@ class _TabletPOSState extends State<TabletPOS> {
   BluetoothPrint bluetoothPrint = BluetoothPrint.instance;
   List<BluetoothDevice> _devices = [];
   String _devicesMsg = "";
+  SQLHelper _sqlHelper = SQLHelper();
+  TextEditingController _searchController = TextEditingController();
 
   void _refreshProductsDetails() async {
     final data = await SQLHelper.getProductsDetails();
@@ -120,6 +122,19 @@ class _TabletPOSState extends State<TabletPOS> {
     });
   }
 
+  void _performSearch(String searchTerm) async {
+    final results = await _sqlHelper.searchProducts(searchTerm); // Call the method using the instance
+    setState(() {
+      _productsDetails = results;
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -161,18 +176,19 @@ class _TabletPOSState extends State<TabletPOS> {
                                 spreadRadius: 1,
                                 blurRadius: 5,
                                 offset:
-                                    Offset(0, 3), // changes position of shadow
+                                const Offset(0, 3), // changes position of shadow
                               ),
                             ],
                           ),
                           child: Row(
                             children: [
-                              const Expanded(
+                              Expanded(
                                 child: Padding(
                                   padding:
-                                      EdgeInsets.symmetric(horizontal: 8.0),
+                                      const EdgeInsets.symmetric(horizontal: 8.0),
                                   child: TextField(
-                                    decoration: InputDecoration(
+                                    controller: _searchController,
+                                    decoration: const InputDecoration(
                                       hintText: 'Search',
                                       border: InputBorder.none,
                                       hintStyle:
@@ -186,7 +202,7 @@ class _TabletPOSState extends State<TabletPOS> {
                                 child: InkWell(
                                   borderRadius: BorderRadius.circular(10.0),
                                   onTap: () {
-                                    // Perform search action here
+                                    _performSearch(_searchController.text);
                                   },
                                   child: Container(
                                     padding: const EdgeInsets.all(10.0),
@@ -215,7 +231,7 @@ class _TabletPOSState extends State<TabletPOS> {
                           itemCount: _productsDetails.length,
                           itemBuilder: (context, index) {
 
-                            if (_productsDetails[index]['ordering_level'].toString() == '0') {
+                            if (_productsDetails[index]['ordering_level'] <= 0) {
 
                               return GestureDetector(
                                 onTap: () {
@@ -296,10 +312,25 @@ class _TabletPOSState extends State<TabletPOS> {
                             } else {
                               return GestureDetector(
                                 onTap: () {
-                                  _addOnTransaction(
-                                      _productsDetails[index]['product_code'],
-                                      _productsDetails[index]['description'],
-                                      _productsDetails[index]['sell_price']);
+                                  final productDetails = _productsDetails[index];
+                                  final transactionIndex = _onTransaction.indexWhere((transaction) =>
+                                  transaction['product_code'] == productDetails['product_code']);
+
+                                  if (transactionIndex != -1 &&
+                                      _onTransaction[transactionIndex]['ordering_level'] >=
+                                          productDetails['ordering_level']) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('You exceed the quantity of the Product'),
+                                      ),
+                                    );
+                                  } else {
+                                    _addOnTransaction(
+                                        productDetails['product_code'],
+                                        productDetails['description'],
+                                        productDetails['sell_price']
+                                    );
+                                  }
                                 },
                                 child: Padding(
                                   padding: const EdgeInsets.all(8.0),

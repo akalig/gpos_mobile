@@ -133,6 +133,27 @@ class SidebarMenu extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 20),
+          ExpansionTile(
+            title: const Text(
+              'User Maintenance',
+              style: TextStyle(fontSize: 14, letterSpacing: 2),
+            ),
+            children: [
+              ListTile(
+                title: const Text('User Details'),
+                onTap: () {
+
+                },
+              ),
+              ListTile(
+                title: const Text('User Transactions'),
+                onTap: () {
+
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
           ListTile(
             title: const Text(
               'Settings',

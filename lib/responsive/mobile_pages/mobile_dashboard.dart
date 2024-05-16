@@ -15,8 +15,8 @@ class _MobileDashboardState extends State<MobileDashboard> {
   List<Map<String, dynamic>> _dailySalesData = [];
   bool _isLoading = true;
 
-  void _refreshSalesHeaders() async {
-    final data = await SQLHelper.getSalesHeaders();
+  void _refreshDailySalesAndTransactionData() async {
+    final data = await SQLHelper.getDailySalesAndTransactionData();
     setState(() {
       _dailySalesData = data;
       _isLoading = false;
@@ -26,7 +26,7 @@ class _MobileDashboardState extends State<MobileDashboard> {
   @override
   void initState() {
     super.initState();
-    _refreshSalesHeaders();
+    _refreshDailySalesAndTransactionData();
   }
 
   @override
@@ -84,7 +84,7 @@ class _MobileDashboardState extends State<MobileDashboard> {
                                 );
                               } else {
                                 final data = snapshot.data!;
-                                final totalSales = data.isNotEmpty ? data.first['total_sales'] ?? 0 : 0; // Corrected column name
+                                final totalSales = data.isNotEmpty ? (data.first['total_sales'] ?? 0).toStringAsFixed(2) : '0.00';
                                 return Text(
                                   '\₱$totalSales',
                                   style: const TextStyle(
