@@ -20,11 +20,14 @@ class _MobileDailySalesState extends State<MobileDailySales> {
       // Filter sales headers to include only today's sales
       final today = DateTime.now();
       _salesHeaders = data.where((transaction) {
-        var transactionDate =
-            DateTime.fromMillisecondsSinceEpoch(transaction['created_at']);
-        return transactionDate.year == today.year &&
-            transactionDate.month == today.month &&
-            transactionDate.day == today.day;
+        String dateString = transaction['created_at'];
+        DateTime dateTime = DateTime.parse(dateString); // Parse the date string
+        var timestamp = dateTime.millisecondsSinceEpoch;
+        var date = DateTime.fromMillisecondsSinceEpoch(timestamp);
+
+        return date.year == today.year &&
+            date.month == today.month &&
+            date.day == today.day;
       }).toList();
       _isLoading = false;
     });
@@ -124,7 +127,7 @@ class _MobileDailySalesState extends State<MobileDailySales> {
                   DataCell(Text(transaction['subtotal'].toString())),
                   DataCell(Text(transaction['total_discount'].toString())),
                   DataCell(Text(transaction['total'].toString())),
-                  DataCell(Text(formatTimestamp(transaction['created_at']))),
+                  DataCell(Text(formatTimestamp(DateTime.parse(transaction['created_at']).millisecondsSinceEpoch)))   ,
                 ]);
               }).toList(),
             ),

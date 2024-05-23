@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:gpos_mobile/print/checkout_receipt.dart';
+import 'package:gpos_mobile/print/external_print.dart';
 import '../../pages/pos_main.dart';
 import 'package:gpos_mobile/database/database_helper.dart';
-import 'package:bluetooth_print/bluetooth_print.dart';
-import 'package:bluetooth_print/bluetooth_print_model.dart';
+
+import '../../print/internal_print.dart';
+// import 'package:bluetooth_print/bluetooth_print.dart';
+// import 'package:bluetooth_print/bluetooth_print_model.dart';
 
 class MobilePOSCheckout extends StatefulWidget {
   const MobilePOSCheckout({super.key});
@@ -19,9 +21,9 @@ class _MobilePOSCheckoutState extends State<MobilePOSCheckout> {
   late TextEditingController _editQuantityController;
   late TextEditingController _amountPaidController;
 
-  BluetoothPrint bluetoothPrint = BluetoothPrint.instance;
-  List<BluetoothDevice> _devices = [];
-  String _devicesMsg = "";
+  // BluetoothPrint bluetoothPrint = BluetoothPrint.instance;
+  // List<BluetoothDevice> _devices = [];
+  // String _devicesMsg = "";
 
   void _refreshOnTransaction() async {
     final data = await SQLHelper.getOnTransaction();
@@ -294,13 +296,6 @@ class _MobilePOSCheckoutState extends State<MobilePOSCheckout> {
                             TextButton(
                               onPressed: () {
 
-                                // Navigator.push(
-                                //   context,
-                                //   MaterialPageRoute(
-                                //     builder: (_) => const CheckoutReceipt(),
-                                //   ),
-                                // );
-
                                 // Parse the amount paid to a double
                                 double amountPaid = double.tryParse(
                                         _amountPaidController.text) ??
@@ -443,12 +438,28 @@ class _MobilePOSCheckoutState extends State<MobilePOSCheckout> {
                                         actions: <Widget>[
                                           TextButton(
                                             onPressed: () {
-                                              Navigator.pushReplacement(
+
+                                              // Navigator.pushReplacement(
+                                              //   context,
+                                              //   MaterialPageRoute(
+                                              //       builder: (context) =>
+                                              //           const POSMain()), // Replace with your actual Home widget
+                                              // );
+
+                                              // Navigator.push(
+                                              //   context,
+                                              //   MaterialPageRoute(
+                                              //     builder: (_) => ExternalPrintReceipt(),
+                                              //   ),
+                                              // );
+
+                                              Navigator.push(
                                                 context,
                                                 MaterialPageRoute(
-                                                    builder: (context) =>
-                                                        const POSMain()), // Replace with your actual Home widget
+                                                  builder: (_) => InternalPrintReceipt(),
+                                                ),
                                               );
+
                                             },
                                             child: const Text('Finish'),
                                           ),

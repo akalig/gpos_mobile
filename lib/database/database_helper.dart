@@ -561,7 +561,7 @@ class SQLHelper {
     double change = amountPaid - total;
 
     // Get the current timestamp as a formatted date string
-    String createdAt = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    String createdAt = DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
 
     // Get the next available transaction_code for sales_details
     List<Map<String, dynamic>> salesHeaders = await getSalesCount();
@@ -647,7 +647,7 @@ class SQLHelper {
         await db.query('on_transaction');
 
     // Get the current timestamp as a formatted date string
-    String createdAt = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    String createdAt = DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
 
     // Get the next available transaction_code for sales_details
     List<Map<String, dynamic>> salesDetails = await getSalesDetailsCount();
@@ -721,7 +721,7 @@ class SQLHelper {
     return db.rawQuery('''
     SELECT description, SUM(ordering_level) AS count
     FROM sales_details
-    WHERE created_at = '$todayFormatted'
+    WHERE DATE(created_at) = '$todayFormatted'
     GROUP BY description;
 
   ''');

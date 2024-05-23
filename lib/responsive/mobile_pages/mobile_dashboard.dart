@@ -68,7 +68,7 @@ class _MobileDashboardState extends State<MobileDashboard> {
                             'Total Sales',
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: 14,
+                              fontSize: 12,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -89,7 +89,7 @@ class _MobileDashboardState extends State<MobileDashboard> {
                                   '\₱$totalSales',
                                   style: const TextStyle(
                                     color: Colors.white,
-                                    fontSize: 24,
+                                    fontSize: 20,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 );
@@ -117,7 +117,7 @@ class _MobileDashboardState extends State<MobileDashboard> {
                             'Total Transactions',
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: 14,
+                              fontSize: 12,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -138,7 +138,7 @@ class _MobileDashboardState extends State<MobileDashboard> {
                                   '$totalTransactions',
                                   style: const TextStyle(
                                     color: Colors.white,
-                                    fontSize: 24,
+                                    fontSize: 20,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 );

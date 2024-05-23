@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import '../../database/database_helper.dart';
 import '../../pages/pos_main.dart';
 import '../../sidebar_menu/sidebar_menu.dart';
-import 'package:bluetooth_print/bluetooth_print.dart';
-import 'package:bluetooth_print/bluetooth_print_model.dart';
+// import 'package:bluetooth_print/bluetooth_print.dart';
+// import 'package:bluetooth_print/bluetooth_print_model.dart';
 
 class TabletPOS extends StatefulWidget {
   const TabletPOS({Key? key}) : super(key: key);
@@ -25,9 +25,10 @@ class _TabletPOSState extends State<TabletPOS> {
   late TextEditingController _amountPaidController;
   bool _isLoading = true;
 
-  BluetoothPrint bluetoothPrint = BluetoothPrint.instance;
-  List<BluetoothDevice> _devices = [];
-  String _devicesMsg = "";
+  // BluetoothPrint bluetoothPrint = BluetoothPrint.instance;
+  // List<BluetoothDevice> _devices = [];
+  // String _devicesMsg = "";
+
   SQLHelper _sqlHelper = SQLHelper();
   TextEditingController _searchController = TextEditingController();
 

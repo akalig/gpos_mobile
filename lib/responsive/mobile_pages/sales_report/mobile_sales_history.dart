@@ -113,8 +113,11 @@ class _MobileSalesHistoryState extends State<MobileSalesHistory> {
               // Remove empty rows and then map the transactions to rows in the DataTable
               rows: _salesHeaders
                   .where((transaction) {
-                var timestamp = transaction['created_at'];
+                String dateString = transaction['created_at'];
+                DateTime dateTime = DateTime.parse(dateString); // Parse the date string
+                var timestamp = dateTime.millisecondsSinceEpoch;
                 var date = DateTime.fromMillisecondsSinceEpoch(timestamp);
+
                 return (_startDate == null || date.isAfter(_startDate!)) &&
                     (_endDate == null || date.isBefore(_endDate!.add(Duration(days: 1))));
               })
@@ -123,7 +126,8 @@ class _MobileSalesHistoryState extends State<MobileSalesHistory> {
                 DataCell(Text(transaction['subtotal'].toString())),
                 DataCell(Text(transaction['total_discount'].toString())),
                 DataCell(Text(transaction['total'].toString())),
-                DataCell(Text(formatTimestamp(transaction['created_at']))),
+                DataCell(Text(formatTimestamp(DateTime.parse(transaction['created_at']).millisecondsSinceEpoch))),
+
               ]))
                   .toList(),
             ),

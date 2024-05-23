@@ -78,31 +78,33 @@ class _MobileSupplierDetailsState extends State<MobileSupplierDetails> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Add Supplier'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: _supplierController,
-                decoration: const InputDecoration(hintText: 'Supplier'),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: _supplierAddressController,
-                decoration: const InputDecoration(hintText: 'Supplier Address'),
-                maxLines: null,
-                keyboardType: TextInputType.multiline,
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: _contactPersonController,
-                decoration: const InputDecoration(hintText: 'Contact Person'),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: _contactNumberController,
-                decoration: const InputDecoration(hintText: 'Contact Number'),
-              ),
-            ],
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: _supplierController,
+                  decoration: const InputDecoration(hintText: 'Supplier'),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: _supplierAddressController,
+                  decoration: const InputDecoration(hintText: 'Supplier Address'),
+                  maxLines: null,
+                  keyboardType: TextInputType.multiline,
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: _contactPersonController,
+                  decoration: const InputDecoration(hintText: 'Contact Person'),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: _contactNumberController,
+                  decoration: const InputDecoration(hintText: 'Contact Number'),
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -134,6 +136,7 @@ class _MobileSupplierDetailsState extends State<MobileSupplierDetails> {
         );
       },
     );
+
   }
 
   /// * DELETE SUPPLIER DETAILS CLASS **
