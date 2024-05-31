@@ -1,325 +1,430 @@
-import 'dart:io';
-import 'dart:typed_data';
+import 'package:flutter/material.dart';
+import 'package:bluetooth_print/bluetooth_print.dart';
+import 'package:bluetooth_print/bluetooth_print_model.dart';
+import 'dart:async';
 import 'package:intl/intl.dart';
-import 'package:qr_flutter/qr_flutter.dart';
-import 'package:path_provider/path_provider.dart';
+import 'dart:convert';
 import 'package:flutter/services.dart';
-import 'package:image/image.dart';
-import 'package:esc_pos_utils/esc_pos_utils.dart';
-import 'package:esc_pos_bluetooth/esc_pos_bluetooth.dart';
-import 'package:flutter/material.dart' hide Image;
-import 'package:oktoast/oktoast.dart';
+
+import '../database/database_helper.dart';
+import '../pages/pos_main.dart';
 
 class ExternalPrintReceipt extends StatefulWidget {
-  ExternalPrintReceipt({Key? key}) : super(key: key);
+  const ExternalPrintReceipt({super.key});
 
   @override
-  _ExternalPrintReceiptState createState() => _ExternalPrintReceiptState();
+  State<ExternalPrintReceipt> createState() => _ExternalPrintReceiptState();
 }
 
 class _ExternalPrintReceiptState extends State<ExternalPrintReceipt> {
-  PrinterBluetoothManager printerManager = PrinterBluetoothManager();
-  List<PrinterBluetooth> _devices = [];
+  BluetoothPrint bluetoothPrint = BluetoothPrint.instance;
+  bool _connected = false;
+  BluetoothDevice? _device;
+  String tips = 'No device connected';
+
+  List<Map<String, dynamic>> _onTransaction = [];
+  List<Map<String, dynamic>> _companyDetailsData = [];
+  bool _isLoading = true;
+
+  void _refreshCompanyDetailsData() async {
+    final data = await SQLHelper.getCompanyDetailsData();
+    setState(() {
+      _companyDetailsData = data;
+      _isLoading = false;
+    });
+  }
+
+  void _refreshOnTransaction() async {
+    final data = await SQLHelper.getOnTransaction();
+    setState(() {
+      _onTransaction = data;
+      _isLoading = false;
+    });
+  }
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => initBluetooth());
+    _refreshOnTransaction();
+    _refreshCompanyDetailsData();
+  }
 
-    printerManager.scanResults.listen((devices) async {
-      // print('UI: Devices found ${devices.length}');
+  /// * TRUNCATE ON TRANSACTION CLASS **
+  Future<void> _truncateOnTransaction() async {
+    await SQLHelper.truncateOnTransaction();
+    _refreshOnTransaction();
+  }
+
+  // Platform messages are asynchronous, so we initialize in an async method.
+  Future<void> initBluetooth() async {
+    bluetoothPrint.startScan(timeout: Duration(seconds: 4));
+
+    bool isConnected=await bluetoothPrint.isConnected??false;
+
+    bluetoothPrint.state.listen((state) {
+      print('******************* Device status: $state');
+
+      switch (state) {
+        case BluetoothPrint.CONNECTED:
+          setState(() {
+            _connected = true;
+            tips = 'Device connected successfully';
+          });
+          break;
+        case BluetoothPrint.DISCONNECTED:
+          setState(() {
+            _connected = false;
+            tips = 'Device disconnected successfully';
+          });
+          break;
+        default:
+          break;
+      }
+    });
+
+    if (!mounted) return;
+
+    if(isConnected) {
       setState(() {
-        _devices = devices;
+        _connected=true;
       });
-    });
-  }
-
-  void _startScanDevices() {
-    setState(() {
-      _devices = [];
-    });
-    printerManager.startScan(Duration(seconds: 10));
-  }
-
-  void _stopScanDevices() {
-    printerManager.stopScan();
-  }
-
-  Future<List<int>> demoReceipt(
-      PaperSize paper, CapabilityProfile profile) async {
-    final Generator ticket = Generator(paper, profile);
-    List<int> bytes = [];
-
-    bytes += ticket.text('BMWARE SOFTWARE DEVELOPMENT',
-        styles: PosStyles(
-          align: PosAlign.center,
-          height: PosTextSize.size2,
-          width: PosTextSize.size2,
-        ),
-        linesAfter: 1);
-
-    bytes += ticket.text('7th Avenue Unisite Subd.',
-        styles: PosStyles(align: PosAlign.center));
-    bytes += ticket.text('Del Pilar, City of San Fernando',
-        styles: PosStyles(align: PosAlign.center));
-    bytes += ticket.text('Pampanga 2000',
-        styles: PosStyles(align: PosAlign.center));
-    bytes += ticket.text('Tel: 123-3456-789',
-        styles: PosStyles(align: PosAlign.center));
-    bytes += ticket.text('Web: www.bmwaresd.com',
-        styles: PosStyles(align: PosAlign.center), linesAfter: 1);
-
-    bytes += ticket.hr();
-    bytes += ticket.row([
-      PosColumn(text: 'Qty', width: 1),
-      PosColumn(text: 'Item', width: 7),
-      PosColumn(
-          text: 'Price', width: 2, styles: PosStyles(align: PosAlign.right)),
-      PosColumn(
-          text: 'Total', width: 2, styles: PosStyles(align: PosAlign.right)),
-    ]);
-
-    bytes += ticket.row([
-      PosColumn(text: '2', width: 1),
-      PosColumn(text: 'ONION RINGS', width: 7),
-      PosColumn(
-          text: '0.99', width: 2, styles: PosStyles(align: PosAlign.right)),
-      PosColumn(
-          text: '1.98', width: 2, styles: PosStyles(align: PosAlign.right)),
-    ]);
-    bytes += ticket.row([
-      PosColumn(text: '1', width: 1),
-      PosColumn(text: 'PIZZA', width: 7),
-      PosColumn(
-          text: '3.45', width: 2, styles: PosStyles(align: PosAlign.right)),
-      PosColumn(
-          text: '3.45', width: 2, styles: PosStyles(align: PosAlign.right)),
-    ]);
-    bytes += ticket.row([
-      PosColumn(text: '1', width: 1),
-      PosColumn(text: 'SPRING ROLLS', width: 7),
-      PosColumn(
-          text: '2.99', width: 2, styles: PosStyles(align: PosAlign.right)),
-      PosColumn(
-          text: '2.99', width: 2, styles: PosStyles(align: PosAlign.right)),
-    ]);
-    bytes += ticket.row([
-      PosColumn(text: '3', width: 1),
-      PosColumn(text: 'CRUNCHY STICKS', width: 7),
-      PosColumn(
-          text: '0.85', width: 2, styles: PosStyles(align: PosAlign.right)),
-      PosColumn(
-          text: '2.55', width: 2, styles: PosStyles(align: PosAlign.right)),
-    ]);
-    bytes += ticket.hr();
-
-    bytes += ticket.row([
-      PosColumn(
-          text: 'TOTAL',
-          width: 6,
-          styles: PosStyles(
-            height: PosTextSize.size2,
-            width: PosTextSize.size2,
-          )),
-      PosColumn(
-          text: '\$10.97',
-          width: 6,
-          styles: PosStyles(
-            align: PosAlign.right,
-            height: PosTextSize.size2,
-            width: PosTextSize.size2,
-          )),
-    ]);
-
-    bytes += ticket.hr(ch: '=', linesAfter: 1);
-
-    bytes += ticket.row([
-      PosColumn(
-          text: 'Cash',
-          width: 7,
-          styles: PosStyles(align: PosAlign.right, width: PosTextSize.size2)),
-      PosColumn(
-          text: '\$15.00',
-          width: 5,
-          styles: PosStyles(align: PosAlign.right, width: PosTextSize.size2)),
-    ]);
-    bytes += ticket.row([
-      PosColumn(
-          text: 'Change',
-          width: 7,
-          styles: PosStyles(align: PosAlign.right, width: PosTextSize.size2)),
-      PosColumn(
-          text: '\$4.03',
-          width: 5,
-          styles: PosStyles(align: PosAlign.right, width: PosTextSize.size2)),
-    ]);
-
-    bytes += ticket.feed(2);
-    bytes += ticket.text('Thank you!',
-        styles: PosStyles(align: PosAlign.center, bold: true));
-
-    final now = DateTime.now();
-    final formatter = DateFormat('MM/dd/yyyy H:m');
-    final String timestamp = formatter.format(now);
-    bytes += ticket.text(timestamp,
-        styles: PosStyles(align: PosAlign.center), linesAfter: 2);
-
-    ticket.feed(2);
-    ticket.cut();
-    return bytes;
-  }
-
-  Future<List<int>> testTicket(
-      PaperSize paper, CapabilityProfile profile) async {
-    final Generator generator = Generator(paper, profile);
-    List<int> bytes = [];
-
-    bytes += generator.text(
-        'Regular: aA bB cC dD eE fF gG hH iI jJ kK lL mM nN oO pP qQ rR sS tT uU vV wW xX yY zZ');
-    // bytes += generator.text('Special 1: àÀ èÈ éÉ ûÛ üÜ çÇ ôÔ',
-    //     styles: PosStyles(codeTable: PosCodeTable.westEur));
-    // bytes += generator.text('Special 2: blåbærgrød',
-    //     styles: PosStyles(codeTable: PosCodeTable.westEur));
-
-    bytes += generator.text('Bold text', styles: PosStyles(bold: true));
-    bytes += generator.text('Reverse text', styles: PosStyles(reverse: true));
-    bytes += generator.text('Underlined text',
-        styles: PosStyles(underline: true), linesAfter: 1);
-    bytes +=
-        generator.text('Align left', styles: PosStyles(align: PosAlign.left));
-    bytes += generator.text('Align center',
-        styles: PosStyles(align: PosAlign.center));
-    bytes += generator.text('Align right',
-        styles: PosStyles(align: PosAlign.right), linesAfter: 1);
-
-    bytes += generator.row([
-      PosColumn(
-        text: 'col3',
-        width: 3,
-        styles: PosStyles(align: PosAlign.center, underline: true),
-      ),
-      PosColumn(
-        text: 'col6',
-        width: 6,
-        styles: PosStyles(align: PosAlign.center, underline: true),
-      ),
-      PosColumn(
-        text: 'col3',
-        width: 3,
-        styles: PosStyles(align: PosAlign.center, underline: true),
-      ),
-    ]);
-
-    bytes += generator.text('Text size 200%',
-        styles: PosStyles(
-          height: PosTextSize.size2,
-          width: PosTextSize.size2,
-        ));
-
-    // Print image
-    final ByteData data = await rootBundle.load('assets/logo.png');
-    final Uint8List buf = data.buffer.asUint8List();
-    final Image image = decodeImage(buf)!;
-    bytes += generator.image(image);
-    // Print image using alternative commands
-    // bytes += generator.imageRaster(image);
-    // bytes += generator.imageRaster(image, imageFn: PosImageFn.graphics);
-
-    // Print barcode
-    final List<int> barData = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 4];
-    bytes += generator.barcode(Barcode.upcA(barData));
-
-    // Print mixed (chinese + latin) text. Only for printers supporting Kanji mode
-    // bytes += generator.text(
-    //   'hello ! 中文字 # world @ éphémère &',
-    //   styles: PosStyles(codeTable: PosCodeTable.westEur),
-    //   containsChinese: true,
-    // );
-
-    bytes += generator.feed(2);
-
-    bytes += generator.cut();
-    return bytes;
-  }
-
-  void _testPrint(PrinterBluetooth printer) async {
-    printerManager.selectPrinter(printer);
-
-    // TODO Don't forget to choose printer's paper
-    const PaperSize paper = PaperSize.mm58;
-    final profile = await CapabilityProfile.load();
-
-    // TEST PRINT
-    // final PosPrintResult res =
-    // await printerManager.printTicket(await testTicket(paper));
-
-    // DEMO RECEIPT
-    final PosPrintResult res =
-    await printerManager.printTicket((await demoReceipt(paper, profile)));
-
-    showToast(res.msg);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Choose Printer'),
-      ),
-      body: ListView.builder(
-          itemCount: _devices.length,
-          itemBuilder: (BuildContext context, int index) {
-            return InkWell(
-              onTap: () => _testPrint(_devices[index]),
-              child: Column(
-                children: <Widget>[
-                  Container(
-                    height: 60,
-                    padding: EdgeInsets.only(left: 10),
-                    alignment: Alignment.centerLeft,
-                    child: Row(
-                      children: <Widget>[
-                        Icon(Icons.print),
-                        SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: <Widget>[
-                              Text(_devices[index].name ?? ''),
-                              Text(_devices[index].address!),
-                              Text(
-                                'Click to print a test receipt',
-                                style: TextStyle(color: Colors.grey[700]),
-                              ),
-                            ],
-                          ),
-                        )
-                      ],
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        appBar: AppBar(
+          title: const Text('Print Receipt'),
+        ),
+        body: RefreshIndicator(
+          onRefresh: () =>
+              bluetoothPrint.startScan(timeout: const Duration(seconds: 4)),
+          child: SingleChildScrollView(
+            child: Column(
+              children: <Widget>[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                      child: Text(tips),
                     ),
+                  ],
+                ),
+                const Divider(),
+                StreamBuilder<List<BluetoothDevice>>(
+                  stream: bluetoothPrint.scanResults,
+                  initialData: [],
+                  builder: (c, snapshot) => Column(
+                    children: snapshot.data!.map((d) => ListTile(
+                      title: Text(d.name??''),
+                      subtitle: Text(d.address??''),
+                      onTap: () async {
+                        setState(() {
+                          _device = d;
+                        });
+                      },
+                      trailing: _device!=null && _device!.address == d.address? const Icon(
+                        Icons.check,
+                        color: Colors.green,
+                      ):null,
+                    )).toList(),
                   ),
-                  Divider(),
-                ],
-              ),
-            );
-          }),
-      floatingActionButton: StreamBuilder<bool>(
-        stream: printerManager.isScanningStream,
-        initialData: false,
-        builder: (c, snapshot) {
-          if (snapshot.data!) {
-            return FloatingActionButton(
-              child: Icon(Icons.stop),
-              onPressed: _stopScanDevices,
-              backgroundColor: Colors.red,
-            );
-          } else {
-            return FloatingActionButton(
-              child: Icon(Icons.search),
-              onPressed: _startScanDevices,
-            );
-          }
-        },
+                ),
+                const Divider(),
+                Container(
+                  padding: EdgeInsets.fromLTRB(20, 5, 20, 10),
+                  child: Column(
+                    children: <Widget>[
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          OutlinedButton(
+                            child: Text('Connect'),
+                            onPressed:  _connected?null:() async {
+                              if(_device!=null && _device!.address !=null){
+                                setState(() {
+                                  tips = 'Connecting...';
+                                });
+                                await bluetoothPrint.connect(_device!);
+                              }else{
+                                setState(() {
+                                  tips = 'please select device';
+                                });
+                                print('please select device');
+                              }
+                            },
+                          ),
+                          const SizedBox(width: 10.0),
+                          OutlinedButton(
+                            child: Text('Disconnect'),
+                            onPressed:  _connected?() async {
+                              setState(() {
+                                tips = 'disconnecting...';
+                              });
+                              await bluetoothPrint.disconnect();
+                            }:null,
+                          ),
+                        ],
+                      ),
+                      const Divider(),
+                      OutlinedButton(
+                        child: Text('Print Receipt'),
+                        onPressed:  _connected?() async {
+                          Map<String, dynamic> config = Map();
+                          List<LineText> list = [];
+
+                          Map<String, dynamic> companyData = _companyDetailsData.first;
+                          String companyName = companyData['company_name'].toString();
+                          String companyAddress = companyData['company_address'].toString();
+                          String companyEmail = companyData['company_email'].toString();
+                          String companyMobileNumber = companyData['company_mobile_number'].toString();
+                          String staffFirstName = companyData['first_name'].toString();
+                          String staffLastName = companyData['last_name'].toString();
+                          String staffFullName = "$staffFirstName $staffLastName";
+
+                          list.add(LineText(type: LineText.TYPE_TEXT, content: companyName, weight: 1, align: LineText.ALIGN_CENTER, fontZoom: 2, linefeed: 1));
+
+                          list.add(LineText(type: LineText.TYPE_TEXT, content: companyAddress, weight: 0, align: LineText.ALIGN_CENTER,linefeed: 1));
+                          list.add(LineText(type: LineText.TYPE_TEXT, content: companyEmail, weight: 0, align: LineText.ALIGN_CENTER,linefeed: 1));
+                          list.add(LineText(type: LineText.TYPE_TEXT, content: '(+63) $companyMobileNumber', weight: 0, align: LineText.ALIGN_CENTER,linefeed: 1));
+                          list.add(LineText(linefeed: 1));
+
+                          DateTime now = DateTime.now(); // Get current date and time
+                          String formattedDate = DateFormat('MM/dd/yyyy').format(now);
+                          String formattedTime = DateFormat('hh:mm a').format(now);
+
+                          list.add(LineText(
+                            type: LineText.TYPE_TEXT,
+                            content: '$formattedDate | $formattedTime',
+                            weight: 0,
+                            align: LineText.ALIGN_CENTER,
+                            linefeed: 1,
+                          ));
+                          list.add(LineText(linefeed: 1));
+
+                          list.add(LineText(type: LineText.TYPE_TEXT, content: 'Staff: $staffFullName', weight: 0, align: LineText.ALIGN_LEFT,linefeed: 1));
+
+                          list.add(LineText(type: LineText.TYPE_TEXT, content: '--------------------------------', weight: 1, align: LineText.ALIGN_CENTER,linefeed: 1));
+
+                          list.add(LineText(
+                            type: LineText.TYPE_TEXT,
+                            content: "Qty",
+                            align: LineText.ALIGN_LEFT,
+                            relativeX: 0,
+                            linefeed: 0,
+                          ));
+
+                          list.add(LineText(
+                            type: LineText.TYPE_TEXT,
+                            content: "Item",
+                            align: LineText.ALIGN_LEFT,
+                            relativeX: 50,
+                            linefeed: 0,
+                          ));
+
+                          // list.add(LineText(
+                          //   type: LineText.TYPE_TEXT,
+                          //   content: "Price",
+                          //   align: LineText.ALIGN_LEFT,
+                          //   relativeX: 210,
+                          //   linefeed: 0,
+                          // ));
+
+                          list.add(LineText(
+                            type: LineText.TYPE_TEXT,
+                            content: "Price",
+                            align: LineText.ALIGN_LEFT,
+                            relativeX: 285,
+                            linefeed: 1,
+                          ));
+
+                          _onTransaction.forEach((transaction) {
+
+                            list.add(LineText(
+                              type: LineText.TYPE_TEXT,
+                              content: transaction['ordering_level'].toString(),
+                              align: LineText.ALIGN_LEFT,
+                              relativeX: 0,
+                              linefeed: 0,
+                            ));
+
+                            list.add(LineText(
+                              type: LineText.TYPE_TEXT,
+                              content: transaction['description'].toString(),
+                              align: LineText.ALIGN_LEFT,
+                              relativeX: 50,
+                              linefeed: 0,
+                            ));
+
+                            list.add(LineText(
+                              type: LineText.TYPE_TEXT,
+                              content: transaction['sell_price'].toStringAsFixed(2),
+                              align: LineText.ALIGN_LEFT,
+                              relativeX: 285,
+                              linefeed: 1,
+                            ));
+
+                            // list.add(LineText(
+                            //   type: LineText.TYPE_TEXT,
+                            //   content: transaction['total'].toStringAsFixed(2),
+                            //   align: LineText.ALIGN_LEFT,
+                            //   relativeX: 285,
+                            //   linefeed: 1,
+                            // ));
+
+                          });
+
+                          list.add(LineText(
+                            type: LineText.TYPE_TEXT,
+                            content: "12345678901234567890123456789012",
+                            align: LineText.ALIGN_LEFT,
+                            relativeX: 0,
+                            linefeed: 1,
+                          ));
+
+                          list.add(LineText(type: LineText.TYPE_TEXT, content: '--------------------------------', weight: 1, align: LineText.ALIGN_CENTER,linefeed: 1));
+
+                          list.add(LineText(
+                            type: LineText.TYPE_TEXT,
+                            content: "Subtotal",
+                            align: LineText.ALIGN_LEFT,
+                            relativeX: 0,
+                            linefeed: 0,
+                          ));
+
+                          list.add(LineText(
+                            type: LineText.TYPE_TEXT,
+                            content: calculateSubtotal().toStringAsFixed(2),
+                            align: LineText.ALIGN_LEFT,
+                            relativeX: 285,
+                            linefeed: 1,
+                          ));
+
+                          list.add(LineText(
+                            type: LineText.TYPE_TEXT,
+                            content: "Total Discount",
+                            align: LineText.ALIGN_LEFT,
+                            relativeX: 0,
+                            linefeed: 0,
+                          ));
+
+                          list.add(LineText(
+                            type: LineText.TYPE_TEXT,
+                            content: calculateTotalDiscount().toStringAsFixed(2),
+                            align: LineText.ALIGN_LEFT,
+                            relativeX: 285,
+                            linefeed: 1,
+                          ));
+
+                          list.add(LineText(
+                            type: LineText.TYPE_TEXT,
+                            content: "Total",
+                            align: LineText.ALIGN_LEFT,
+                            weight: 1,
+                            fontZoom: 1,
+                            relativeX: 0,
+                            linefeed: 0,
+                          ));
+
+                          list.add(LineText(
+                            type: LineText.TYPE_TEXT,
+                            content: calculateTotal().toStringAsFixed(2),
+                            align: LineText.ALIGN_LEFT,
+                            weight: 1,
+                            fontZoom: 1,
+                            relativeX: 285,
+                            linefeed: 1,
+                          ));
+
+                          list.add(LineText(linefeed: 1));
+
+                          // ByteData data = await rootBundle.load('lib/assets/images/greatpos_logo.png');
+                          // List<int> imageBytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+                          // String base64Image = base64Encode(imageBytes);
+                          // list.add(LineText(type: LineText.TYPE_IMAGE, content: base64Image, align: LineText.ALIGN_CENTER, linefeed: 1));
+
+                          await bluetoothPrint.printReceipt(config, list);
+                        }:null,
+                      ),
+
+                      OutlinedButton(
+                        child: Text('Finish'),
+                        onPressed: () {
+
+                          _truncateOnTransaction();
+
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                const POSMain()), // Replace with your actual Home widget
+                          );
+
+                        },
+                      )
+                    ],
+                  ),
+                )
+              ],
+            ),
+          ),
+        ),
+        floatingActionButton: StreamBuilder<bool>(
+          stream: bluetoothPrint.isScanning,
+          initialData: false,
+          builder: (c, snapshot) {
+            if (snapshot.data == true) {
+              return FloatingActionButton(
+                child: Icon(Icons.stop),
+                onPressed: () => bluetoothPrint.stopScan(),
+                backgroundColor: Colors.red,
+              );
+            } else {
+              return FloatingActionButton(
+                  child: Icon(Icons.search),
+                  onPressed: () => bluetoothPrint.startScan(timeout: Duration(seconds: 4)));
+            }
+          },
+        ),
       ),
     );
   }
+
+  double calculateTotal() {
+    double total = 0.0;
+    for (var transaction in _onTransaction) {
+      total += transaction['total'] as double;
+    }
+    return total;
+  }
+
+  double calculateSubtotal() {
+    double total = 0.0;
+    for (var transaction in _onTransaction) {
+      total += transaction['subtotal'] as double;
+    }
+    return total;
+  }
+
+  double calculateTotalDiscount() {
+    double total = 0.0;
+    for (var transaction in _onTransaction) {
+      total += transaction['discount'] as double;
+    }
+    return total;
+  }
+
+  int calculateQuantity() {
+    int total = 0;
+    for (var transaction in _onTransaction) {
+      total += transaction['ordering_level'] as int;
+    }
+    return total;
+  }
+
 }

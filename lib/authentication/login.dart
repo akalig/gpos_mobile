@@ -3,6 +3,7 @@ import 'package:gpos_mobile/authentication/register.dart';
 import 'package:gpos_mobile/pages/dashboard_main.dart';
 import '../components/login_button.dart';
 import '../components/authentication_textfield.dart';
+import '../database/database_helper.dart';
 
 class Login extends StatefulWidget {
   const Login({Key? key}) : super(key: key);
@@ -16,10 +17,21 @@ class _LoginState extends State<Login> {
   final passwordController = TextEditingController();
 
   Future<void> loggedInUser(BuildContext context) async {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const DashboardMain()),
-    );
+    final username = emailController.text.trim();
+    final password = passwordController.text.trim();
+
+    final user = await SQLHelper.queryUserAccount(username, password);
+    if (user != null) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const DashboardMain()),
+      );
+    } else {
+      // Show error message for invalid credentials
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Invalid username or password')),
+      );
+    }
   }
 
   @override

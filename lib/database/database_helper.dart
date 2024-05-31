@@ -13,7 +13,8 @@ class SQLHelper {
       id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
       company_name TEXT,
       company_address TEXT,
-      company_type TEXT,
+      company_mobile_number TEXT,
+      company_email TEXT,
       first_name TEXT,
       middle_name TEXT,
       last_name TEXT,
@@ -23,6 +24,15 @@ class SQLHelper {
       password TEXT,
       user_type TEXT,
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )""");
+    print("...creating a product types table");
+  }
+
+  /// * Create Receipt Footer Table *
+  static Future<void> createReceiptFooterTable(sql.Database database) async {
+    await database.execute("""CREATE TABLE receipt_footer(
+      line_one TEXT,
+      line_two TEXT
       )""");
     print("...creating a product types table");
   }
@@ -135,6 +145,7 @@ class SQLHelper {
         await createSalesDetailsTable(database);
         await createSalesHeadersTable(database);
         await createUserAccountTable(database);
+        await createReceiptFooterTable(database);
       },
     );
   }
@@ -147,7 +158,8 @@ class SQLHelper {
   static Future<int> createUserAccount(
       String companyName,
       String companyAddress,
-      String companyType,
+      String companyMobileNumber,
+      String companyEmail,
       String firstName,
       String middleName,
       String lastName,
@@ -160,7 +172,8 @@ class SQLHelper {
     final data = {
       'company_name': companyName,
       'company_address': companyAddress,
-      'company_type': companyType,
+      'company_mobile_number': companyMobileNumber,
+      'company_email': companyEmail,
       'first_name': firstName,
       'middle_name': middleName,
       'last_name': lastName,
@@ -172,6 +185,21 @@ class SQLHelper {
     final id = await db.insert('users', data,
         conflictAlgorithm: sql.ConflictAlgorithm.replace);
     return id;
+  }
+
+  static Future<Map<String, dynamic>?> queryUserAccount(String username, String password) async {
+    final db = await SQLHelper.db();
+    final List<Map<String, dynamic>> result = await db.query(
+      'users',
+      where: 'username = ? AND password = ?',
+      whereArgs: [username, password],
+    );
+    return result.isNotEmpty ? result.first : null;
+  }
+
+  static Future<List<Map<String, dynamic>>> getCompanyDetailsData() async {
+    final db = await SQLHelper.db();
+    return db.query('users');
   }
 
   /** --------------------------------------------------------------------------------------- **/
@@ -600,7 +628,7 @@ class SQLHelper {
     return db.query('sales_headers', orderBy: "id");
   }
 
-  /// * Get Sales Headers *
+  /// * Get Daily Sales Headers *
   static Future<List<Map<String, dynamic>>> getDailySalesHeaders() async {
     final db = await SQLHelper.db();
     return db.query('sales_headers', orderBy: "id");

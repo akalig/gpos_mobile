@@ -72,7 +72,7 @@ class _MobilePOSCheckoutState extends State<MobilePOSCheckout> {
     await SQLHelper.createSalesDetails();
   }
 
-  /// * ADD TRUNCATE ON TRANSACTION CLASS **
+  /// * TRUNCATE ON TRANSACTION CLASS **
   Future<void> _truncateOnTransaction() async {
     await SQLHelper.truncateOnTransaction();
     _amountPaidController.text = '';
@@ -323,7 +323,7 @@ class _MobilePOSCheckoutState extends State<MobilePOSCheckout> {
                                   Future.delayed(const Duration(seconds: 2));
 
                                   // Truncate on_transaction table
-                                  _truncateOnTransaction();
+                                  // _truncateOnTransaction();
 
                                   double change = amountPaid - total;
 
@@ -446,19 +446,19 @@ class _MobilePOSCheckoutState extends State<MobilePOSCheckout> {
                                               //           const POSMain()), // Replace with your actual Home widget
                                               // );
 
-                                              // Navigator.push(
-                                              //   context,
-                                              //   MaterialPageRoute(
-                                              //     builder: (_) => ExternalPrintReceipt(),
-                                              //   ),
-                                              // );
-
                                               Navigator.push(
                                                 context,
                                                 MaterialPageRoute(
-                                                  builder: (_) => InternalPrintReceipt(),
+                                                  builder: (_) => ExternalPrintReceipt(),
                                                 ),
                                               );
+
+                                              // Navigator.push(
+                                              //   context,
+                                              //   MaterialPageRoute(
+                                              //     builder: (_) => InternalPrintReceipt(),
+                                              //   ),
+                                              // );
 
                                             },
                                             child: const Text('Finish'),

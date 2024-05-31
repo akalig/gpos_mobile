@@ -14,7 +14,8 @@ class Register extends StatefulWidget {
 class _RegisterState extends State<Register> {
   late TextEditingController companyNameController;
   late TextEditingController companyAddressController;
-  late TextEditingController companyTypeController;
+  late TextEditingController companyMobileNumberController;
+  late TextEditingController companyEmailController;
   late TextEditingController firstNameController;
   late TextEditingController middleNameController;
   late TextEditingController lastNameController;
@@ -28,6 +29,25 @@ class _RegisterState extends State<Register> {
 
   /// * ADD USER CLASS **
   Future<void> _addUserAccount() async {
+    if (companyNameController.text == '' ||
+        companyAddressController.text == '' ||
+        companyMobileNumberController.text == '' ||
+        companyEmailController.text == '' ||
+        firstNameController.text == '' ||
+        lastNameController.text == '' ||
+        userNameController.text == '' ||
+        passwordController.text == '' ||
+        userTypeController.text == '') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content:
+              Text('Some fields are missing, please complete all the fields.'),
+        ),
+      );
+
+      return;
+    }
+
     if (passwordController.text != confirmPasswordController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -38,35 +58,18 @@ class _RegisterState extends State<Register> {
       return;
     }
 
-    if (companyNameController.text == '' ||
-        companyAddressController.text == '' ||
-        companyTypeController.text == '' ||
-        firstNameController.text == '' ||
-        lastNameController.text == '' ||
-        userNameController.text == '' ||
-        passwordController.text == '' ||
-        userTypeController.text == '') {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content:
-          Text('Some fields are missing, please complete all the fields.'),
-        ),
-      );
-
-      return;
-    }
-
     await SQLHelper.createUserAccount(
-      companyNameController.text,
-      companyAddressController.text,
-      companyTypeController.text,
-      firstNameController.text,
-      middleNameController.text,
-      lastNameController.text,
-      middleNameController.text,
-      userNameController.text,
-      passwordController.text,
-      userTypeController.text);
+        companyNameController.text,
+        companyAddressController.text,
+        companyMobileNumberController.text,
+        companyEmailController.text,
+        firstNameController.text,
+        middleNameController.text,
+        lastNameController.text,
+        middleNameController.text,
+        userNameController.text,
+        passwordController.text,
+        userTypeController.text);
 
     Navigator.push(
       context,
@@ -81,7 +84,8 @@ class _RegisterState extends State<Register> {
     super.initState();
     companyNameController = TextEditingController();
     companyAddressController = TextEditingController();
-    companyTypeController = TextEditingController();
+    companyMobileNumberController = TextEditingController();
+    companyEmailController = TextEditingController();
     firstNameController = TextEditingController();
     middleNameController = TextEditingController();
     lastNameController = TextEditingController();
@@ -96,7 +100,8 @@ class _RegisterState extends State<Register> {
   void dispose() {
     companyNameController.dispose();
     companyAddressController.dispose();
-    companyTypeController.dispose();
+    companyMobileNumberController.dispose();
+    companyEmailController.dispose();
     userNameController.dispose();
     passwordController.dispose();
     confirmPasswordController.dispose();
@@ -116,11 +121,20 @@ class _RegisterState extends State<Register> {
             Text(
               'Register',
               style: TextStyle(
-                color: Colors.grey[700],
-                fontSize: 16,
-              ),
+                  color: Colors.grey[700],
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 25),
+            Text(
+              'Company Details',
+              textAlign: TextAlign.start,
+              style: TextStyle(
+                  color: Colors.grey[700],
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
             AuthenticationTextField(
               controller: companyNameController,
               hintText: 'Company Name',
@@ -134,9 +148,26 @@ class _RegisterState extends State<Register> {
             ),
             const SizedBox(height: 10),
             AuthenticationTextField(
-              controller: companyTypeController,
-              hintText: 'Company Type',
+              controller: companyMobileNumberController,
+              hintText: 'Mobile Number',
               obscureText: false,
+            ),
+            const SizedBox(height: 10),
+            AuthenticationTextField(
+              controller: companyEmailController,
+              hintText: 'Email Address',
+              obscureText: false,
+            ),
+            const SizedBox(height: 15),
+            const Divider(),
+            const SizedBox(height: 10),
+            Text(
+              'Personal Details',
+              textAlign: TextAlign.start,
+              style: TextStyle(
+                  color: Colors.grey[700],
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
             AuthenticationTextField(
@@ -161,6 +192,17 @@ class _RegisterState extends State<Register> {
               controller: suffixNameController,
               hintText: 'Suffix Name',
               obscureText: false,
+            ),
+            const SizedBox(height: 15),
+            const Divider(),
+            const SizedBox(height: 10),
+            Text(
+              'User Account Details',
+              textAlign: TextAlign.start,
+              style: TextStyle(
+                  color: Colors.grey[700],
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
             AuthenticationTextField(

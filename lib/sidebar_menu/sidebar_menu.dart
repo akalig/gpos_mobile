@@ -7,6 +7,7 @@ import 'package:gpos_mobile/pages/sales_report/daily_sales.dart';
 import 'package:gpos_mobile/pages/sales_report/sales_history.dart';
 
 import '../pages/product_maintenance/supplier_details_main.dart';
+import '../pages/settings_main.dart';
 
 class SidebarMenu extends StatelessWidget {
   const SidebarMenu({Key? key}) : super(key: key);
@@ -126,7 +127,7 @@ class SidebarMenu extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                        const SalesHistoryMain()), // Replace with your actual Home widget
+                        const SalesHistoryMain()),
                   );
                 },
               ),
@@ -160,7 +161,12 @@ class SidebarMenu extends StatelessWidget {
               style: TextStyle(fontSize: 14, letterSpacing: 2),
             ),
             onTap: () {
-              // Handle settings tap
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                    builder: (context) =>
+                    const SettingsMain()),
+              );
             },
           ),
         ],
