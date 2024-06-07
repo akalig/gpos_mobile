@@ -76,6 +76,14 @@ class _MobilePOSState extends State<MobilePOS> {
     super.dispose();
   }
 
+  /// * UPDATE VOID SALES CLASS **
+  Future<void> _updateVoidSales(int id, int transactionCode) async {
+    await SQLHelper.salesVoid(id, transactionCode);
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      content: Text('Successfully voided'),
+    ));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -102,67 +110,94 @@ class _MobilePOSState extends State<MobilePOS> {
                 builder: (BuildContext context) {
                   return AlertDialog(
                     title: const Text("Transaction History"),
-                    content: Column(
-                      children: [
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: SingleChildScrollView(
-                            scrollDirection: Axis.vertical,
-                            child: DataTable(
-                              columnSpacing: 50,
-                              columns: const [
-                                DataColumn(label: Text('Transaction Code')),
-                                DataColumn(label: Text('Subtotal')),
-                                DataColumn(label: Text('Discount')),
-                                DataColumn(label: Text('Total')),
-                                DataColumn(label: Text('Date and Time')),
-                                DataColumn(label: Text('Actions')),
-                              ],
-                              rows: _salesHeaders.map((transaction) {
-                                return DataRow(cells: [
-                                  DataCell(Text(transaction['transaction_code']
-                                      .toString())),
-                                  DataCell(
-                                      Text(transaction['subtotal'].toString())),
-                                  DataCell(Text(transaction['total_discount']
-                                      .toString())),
-                                  DataCell(
-                                      Text(transaction['total'].toString())),
-                                  DataCell(Text(
-                                      transaction['created_at'].toString())),
-                                  DataCell(
-                                    Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          color: Colors.red,
-                                          borderRadius:
-                                              BorderRadius.circular(5.0),
-                                        ),
-                                        child: ElevatedButton(
-                                          onPressed: () {
-                                            // Handle button press
-                                          },
-                                          style: ElevatedButton.styleFrom(
-                                            foregroundColor: Colors.white,
-                                            backgroundColor: Colors.red,
-                                            // text color
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(8.0),
-                                            ),
-                                          ),
-                                          child: const Text('Void'),
-                                        ),
+                    content: SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.vertical,
+                              child: DataTable(
+                                columnSpacing: 50,
+                                columns: const [
+                                  DataColumn(label: Text('Transaction Code')),
+                                  DataColumn(label: Text('Subtotal')),
+                                  DataColumn(label: Text('Discount')),
+                                  DataColumn(label: Text('Total')),
+                                  DataColumn(label: Text('Date and Time')),
+                                  DataColumn(label: Text('Actions')),
+                                ],
+                                rows: _salesHeaders.map((transaction) {
+                                  return DataRow(cells: [
+                                    DataCell(Text(transaction['transaction_code']
+                                        .toString())),
+                                    DataCell(
+                                        Text(transaction['subtotal'].toString())),
+                                    DataCell(Text(transaction['total_discount']
+                                        .toString())),
+                                    DataCell(
+                                        Text(transaction['total'].toString())),
+                                    DataCell(Text(
+                                        transaction['created_at'].toString())),
+                                    DataCell(
+                                      Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: transaction['status'] == 'void'
+                                            ? Container(
+                                                decoration: BoxDecoration(
+                                                  color: Colors.grey,
+                                                  borderRadius:
+                                                      BorderRadius.circular(5.0),
+                                                ),
+                                                child: ElevatedButton(
+                                                  onPressed: () {},
+                                                  style: ElevatedButton.styleFrom(
+                                                    foregroundColor: Colors.black,
+                                                    backgroundColor: Colors.grey,
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              8.0),
+                                                    ),
+                                                  ),
+                                                  child: const Text('Voided'),
+                                                ),
+                                              )
+                                            : Container(
+                                                decoration: BoxDecoration(
+                                                  color: Colors.red,
+                                                  borderRadius:
+                                                      BorderRadius.circular(5.0),
+                                                ),
+                                                child: ElevatedButton(
+                                                  onPressed: () async {
+                                                    await _updateVoidSales(
+                                                        transaction['id'],
+                                                        transaction[
+                                                            'transaction_code']);
+                                                    Navigator.of(context).pop();
+                                                  },
+                                                  style: ElevatedButton.styleFrom(
+                                                    foregroundColor: Colors.white,
+                                                    backgroundColor: Colors.red,
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              8.0),
+                                                    ),
+                                                  ),
+                                                  child: const Text('Void'),
+                                                ),
+                                              ),
                                       ),
                                     ),
-                                  ),
-                                ]);
-                              }).toList(),
+                                  ]);
+                                }).toList(),
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                     actions: <Widget>[
                       TextButton(
@@ -327,23 +362,26 @@ class _MobilePOSState extends State<MobilePOS> {
                       // Inside GridView.builder's itemBuilder function
                       onTap: () {
                         final productDetails = _productsDetails[index];
-                        final transactionIndex = _onTransaction.indexWhere((transaction) =>
-                        transaction['product_code'] == productDetails['product_code']);
+                        final transactionIndex = _onTransaction.indexWhere(
+                            (transaction) =>
+                                transaction['product_code'] ==
+                                productDetails['product_code']);
 
                         if (transactionIndex != -1 &&
-                            _onTransaction[transactionIndex]['ordering_level'] >=
+                            _onTransaction[transactionIndex]
+                                    ['ordering_level'] >=
                                 productDetails['ordering_level']) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text('You exceed the quantity of the Product'),
+                              content: Text(
+                                  'You exceed the quantity of the Product'),
                             ),
                           );
                         } else {
                           _addOnTransaction(
                               productDetails['product_code'],
                               productDetails['description'],
-                              productDetails['sell_price']
-                          );
+                              productDetails['sell_price']);
                         }
                       },
 

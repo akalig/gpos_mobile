@@ -25,6 +25,9 @@ class _RegisterState extends State<Register> {
   late TextEditingController userTypeController;
   late TextEditingController confirmPasswordController;
 
+  String? defaultReceiptFooterLineOne = "Thank you for shopping with us.";
+  String? defaultReceiptFooterLineTwo = "This is an official receipt.";
+
   bool isLoading = false;
 
   /// * ADD USER CLASS **
@@ -70,6 +73,9 @@ class _RegisterState extends State<Register> {
         userNameController.text,
         passwordController.text,
         userTypeController.text);
+
+    await SQLHelper.createDefaultFooter(
+        defaultReceiptFooterLineOne, defaultReceiptFooterLineTwo);
 
     Navigator.push(
       context,

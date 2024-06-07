@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:gpos_mobile/print/external_print.dart';
+import 'package:gpos_mobile/print/external_print_receipt.dart';
 import '../../pages/pos_main.dart';
 import 'package:gpos_mobile/database/database_helper.dart';
 

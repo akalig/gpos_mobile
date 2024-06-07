@@ -23,6 +23,7 @@ class _ExternalPrintReceiptState extends State<ExternalPrintReceipt> {
   String tips = 'No device connected';
 
   List<Map<String, dynamic>> _onTransaction = [];
+  List<Map<String, dynamic>> _receiptFooter = [];
   List<Map<String, dynamic>> _companyDetailsData = [];
   bool _isLoading = true;
 
@@ -42,11 +43,20 @@ class _ExternalPrintReceiptState extends State<ExternalPrintReceipt> {
     });
   }
 
+  void _refreshReceiptFooter() async {
+    final data = await SQLHelper.getReceiptFooter();
+    setState(() {
+      _receiptFooter = data;
+      _isLoading = false;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) => initBluetooth());
     _refreshOnTransaction();
+    _refreshReceiptFooter();
     _refreshCompanyDetailsData();
   }
 
@@ -187,6 +197,10 @@ class _ExternalPrintReceiptState extends State<ExternalPrintReceipt> {
                           String staffLastName = companyData['last_name'].toString();
                           String staffFullName = "$staffFirstName $staffLastName";
 
+                          Map<String, dynamic> receiptFooter = _receiptFooter.first;
+                          String footerLineOne = receiptFooter['line_one'].toString();
+                          String footerLineTwo = receiptFooter['line_two'].toString();
+
                           list.add(LineText(type: LineText.TYPE_TEXT, content: companyName, weight: 1, align: LineText.ALIGN_CENTER, fontZoom: 2, linefeed: 1));
 
                           list.add(LineText(type: LineText.TYPE_TEXT, content: companyAddress, weight: 0, align: LineText.ALIGN_CENTER,linefeed: 1));
@@ -279,13 +293,13 @@ class _ExternalPrintReceiptState extends State<ExternalPrintReceipt> {
 
                           });
 
-                          list.add(LineText(
-                            type: LineText.TYPE_TEXT,
-                            content: "12345678901234567890123456789012",
-                            align: LineText.ALIGN_LEFT,
-                            relativeX: 0,
-                            linefeed: 1,
-                          ));
+                          // list.add(LineText(
+                          //   type: LineText.TYPE_TEXT,
+                          //   content: "12345678901234567890123456789012",
+                          //   align: LineText.ALIGN_LEFT,
+                          //   relativeX: 0,
+                          //   linefeed: 1,
+                          // ));
 
                           list.add(LineText(type: LineText.TYPE_TEXT, content: '--------------------------------', weight: 1, align: LineText.ALIGN_CENTER,linefeed: 1));
 
@@ -341,6 +355,13 @@ class _ExternalPrintReceiptState extends State<ExternalPrintReceipt> {
                             linefeed: 1,
                           ));
 
+                          list.add(LineText(linefeed: 1));
+
+                          list.add(LineText(type: LineText.TYPE_TEXT, content: footerLineOne, weight: 0, align: LineText.ALIGN_CENTER,linefeed: 1));
+                          list.add(LineText(linefeed: 1));
+                          list.add(LineText(type: LineText.TYPE_TEXT, content: "- $footerLineTwo -", weight: 0, align: LineText.ALIGN_CENTER,linefeed: 1));
+
+                          list.add(LineText(linefeed: 1));
                           list.add(LineText(linefeed: 1));
 
                           // ByteData data = await rootBundle.load('lib/assets/images/greatpos_logo.png');

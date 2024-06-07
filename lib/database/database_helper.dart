@@ -28,15 +28,6 @@ class SQLHelper {
     print("...creating a product types table");
   }
 
-  /// * Create Receipt Footer Table *
-  static Future<void> createReceiptFooterTable(sql.Database database) async {
-    await database.execute("""CREATE TABLE receipt_footer(
-      line_one TEXT,
-      line_two TEXT
-      )""");
-    print("...creating a product types table");
-  }
-
   /// * Create Product Types Table *
   static Future<void> createProductTypesTable(sql.Database database) async {
     await database.execute("""CREATE TABLE product_types(
@@ -133,6 +124,15 @@ class SQLHelper {
     print("...creating a Sales headers table");
   }
 
+  /// * Create Receipt Footer Table *
+  static Future<void> createReceiptFooterTable(sql.Database database) async {
+    await database.execute("""CREATE TABLE receipt_footer(
+      line_one TEXT,
+      line_two TEXT
+      )""");
+    print("...creating a product types table");
+  }
+
   static Future<sql.Database> db() async {
     return sql.openDatabase(
       'gposmobile.db',
@@ -151,7 +151,38 @@ class SQLHelper {
   }
 
   /** --------------------------------------------------------------------------------------- **/
-  /** -------------------------------USER ACCOUNT TYPES-------------------------------------- **/
+  /** -------------------------------RECEIPT FOOTER QUERIES---------------------------------- **/
+  /** --------------------------------------------------------------------------------------- **/
+
+  /// * Create Default Receipt Footer *
+  static Future<int> createDefaultFooter(
+      String? lineOne, String? lineTwo) async {
+    final db = await SQLHelper.db();
+
+    final data = {'line_one': lineOne, 'line_two': lineTwo};
+    final id = await db.insert('receipt_footer', data,
+        conflictAlgorithm: sql.ConflictAlgorithm.replace);
+    return id;
+  }
+
+  static Future<List<Map<String, dynamic>>> getReceiptFooter() async {
+    final db = await SQLHelper.db();
+    return db.query('receipt_footer');
+  }
+
+  /// * Update Product Type *
+  static Future<int> updateReceiptFooter(
+      String? lineOne, String? lineTwo) async {
+    final db = await SQLHelper.db();
+
+    final data = {'line_one': lineOne, 'line_two': lineTwo};
+
+    final result = await db.update('receipt_footer', data);
+    return result;
+  }
+
+  /** --------------------------------------------------------------------------------------- **/
+  /** -------------------------------USER ACCOUNT TYPES QUERIES------------------------------ **/
   /** --------------------------------------------------------------------------------------- **/
 
   /// * Create Product Types *
@@ -187,7 +218,8 @@ class SQLHelper {
     return id;
   }
 
-  static Future<Map<String, dynamic>?> queryUserAccount(String username, String password) async {
+  static Future<Map<String, dynamic>?> queryUserAccount(
+      String username, String password) async {
     final db = await SQLHelper.db();
     final List<Map<String, dynamic>> result = await db.query(
       'users',
@@ -195,6 +227,25 @@ class SQLHelper {
       whereArgs: [username, password],
     );
     return result.isNotEmpty ? result.first : null;
+  }
+
+  /// * Update Company Details *
+  static Future<int> updateCompanyDetails(
+      String? companyName,
+      String? companyAddress,
+      String? companyMobileNumber,
+      String? companyEmail) async {
+    final db = await SQLHelper.db();
+
+    final data = {
+      'company_name': companyName,
+      'company_address': companyAddress,
+      'company_mobile_number': companyMobileNumber,
+      'company_email': companyEmail
+    };
+
+    final result = await db.update('users', data);
+    return result;
   }
 
   static Future<List<Map<String, dynamic>>> getCompanyDetailsData() async {
@@ -634,6 +685,19 @@ class SQLHelper {
     return db.query('sales_headers', orderBy: "id");
   }
 
+  /// * Update Sales Void Status *
+  static Future<int> salesVoid(int id, int transactionCode) async {
+    final db = await SQLHelper.db();
+
+    final data = {
+      'status': 'void',
+    };
+
+    final result = await db.update('sales_headers', data,
+        where: "transaction_code = ?", whereArgs: [transactionCode]);
+    return result;
+  }
+
   static Future<List<Map<String, dynamic>>> getWeeklySalesData() async {
     final db = await SQLHelper.db();
     // Query to sum total by date and return the date and total for each day
@@ -655,6 +719,28 @@ class SQLHelper {
     SELECT COUNT(id) AS transactions_count, SUM(total) AS total_sales
     FROM sales_headers
     WHERE date(created_at) = '$todayFormatted';
+  ''');
+
+    print('SQL query result: $results');
+
+    return results;
+  }
+
+  static Future<List<Map<String, dynamic>>> getZReadData(String formattedDate) async {
+    final db = await SQLHelper.db();
+    // Ensure the date is correctly formatted for the SQL query
+    final results = await db.rawQuery('''
+    SELECT
+        created_at,
+        COUNT(id) AS transactions_count,
+        SUM(subtotal) AS total_gross,
+        SUM(total_discount) AS total_discount,
+        SUM(total) AS total_sales,
+        (SELECT COUNT(id) FROM sales_headers WHERE status = 'void' AND date(created_at) = '$formattedDate') AS count_void,
+        (SELECT SUM(total) FROM sales_headers WHERE status = 'void' AND date(created_at) = '$formattedDate') AS total_void,
+        (SELECT COUNT(id) FROM sales_headers WHERE total_discount != 0 AND date(created_at) = '$formattedDate') AS count_discount
+    FROM sales_headers
+    WHERE date(created_at) = '$formattedDate';
   ''');
 
     print('SQL query result: $results');

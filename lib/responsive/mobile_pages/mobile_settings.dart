@@ -14,11 +14,14 @@ class MobileSettings extends StatefulWidget {
 
 class _MobileSettingsState extends State<MobileSettings> {
   List<Map<String, dynamic>> _companyDetails = [];
+  List<Map<String, dynamic>> _receiptFooter = [];
   bool _isLoading = true;
   late TextEditingController _companyNameController;
   late TextEditingController _companyAddressController;
   late TextEditingController _companyMobileNumberController;
   late TextEditingController _companyEmailController;
+  late TextEditingController _receiptFooterLineOneController;
+  late TextEditingController _receiptFooterLineTwoController;
 
   @override
   void initState() {
@@ -27,8 +30,11 @@ class _MobileSettingsState extends State<MobileSettings> {
     _companyAddressController = TextEditingController();
     _companyMobileNumberController = TextEditingController();
     _companyEmailController = TextEditingController();
+    _receiptFooterLineOneController = TextEditingController();
+    _receiptFooterLineTwoController = TextEditingController();
 
     _refreshCompanyDetails();
+    _refreshReceiptFooter();
   }
 
   void _refreshCompanyDetails() async {
@@ -48,13 +54,52 @@ class _MobileSettingsState extends State<MobileSettings> {
     }
   }
 
+  void _refreshReceiptFooter() async {
+    final data = await SQLHelper.getReceiptFooter();
+    setState(() {
+      _receiptFooter = data;
+      _isLoading = false;
+    });
+
+    if (_receiptFooter.isNotEmpty) {
+      final existingProductType = _receiptFooter.first;
+      _receiptFooterLineOneController.text = existingProductType['line_one'];
+      _receiptFooterLineTwoController.text = existingProductType['line_two'];
+    }
+  }
+
   @override
   void dispose() {
     _companyNameController.dispose();
     _companyAddressController.dispose();
     _companyMobileNumberController.dispose();
     _companyEmailController.dispose();
+    _receiptFooterLineOneController.dispose();
+    _receiptFooterLineTwoController.dispose();
     super.dispose();
+  }
+
+  /// * UPDATE COMPANY DETAILS CLASS **
+  Future<void> _updateCompanyDetails() async {
+    await SQLHelper.updateCompanyDetails(
+        _companyNameController.text,
+        _companyAddressController.text,
+        _companyMobileNumberController.text,
+        _companyEmailController.text);
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      content: Text('Successfully updated'),
+    ));
+    _refreshCompanyDetails();
+  }
+
+  /// * UPDATE RECEIPT FOOTER CLASS **
+  Future<void> _updateReceiptFooter() async {
+    await SQLHelper.updateReceiptFooter(_receiptFooterLineOneController.text,
+        _receiptFooterLineTwoController.text);
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      content: Text('Successfully updated'),
+    ));
+    _refreshReceiptFooter();
   }
 
   @override
@@ -125,8 +170,37 @@ class _MobileSettingsState extends State<MobileSettings> {
               ),
               const SizedBox(height: 25),
               SaveButton(
-                onTap: () {
-
+                onTap: () async {
+                  await _updateCompanyDetails();
+                },
+              ),
+              const SizedBox(height: 30),
+              const Padding(
+                padding: EdgeInsets.only(left: 8.0),
+                child: Text(
+                  "Receipt Footer Settings",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              AuthenticationTextField(
+                controller: _receiptFooterLineOneController,
+                hintText: 'Footer Line One',
+                obscureText: false,
+              ),
+              const SizedBox(height: 10),
+              AuthenticationTextField(
+                controller: _receiptFooterLineTwoController,
+                hintText: 'Footer Line Two',
+                obscureText: false,
+              ),
+              const SizedBox(height: 25),
+              SaveButton(
+                onTap: () async {
+                  await _updateReceiptFooter();
                 },
               ),
             ],

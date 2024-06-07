@@ -3,8 +3,9 @@ import 'package:gpos_mobile/pages/dashboard_main.dart';
 import 'package:gpos_mobile/pages/pos_main.dart';
 import 'package:gpos_mobile/pages/product_maintenance/product_details_main.dart';
 import 'package:gpos_mobile/pages/product_maintenance/product_types_main.dart';
-import 'package:gpos_mobile/pages/sales_report/daily_sales.dart';
-import 'package:gpos_mobile/pages/sales_report/sales_history.dart';
+import 'package:gpos_mobile/pages/sales_report/daily_sales_main.dart';
+import 'package:gpos_mobile/pages/sales_report/sales_history_main.dart';
+import 'package:gpos_mobile/pages/user_maintenance/user_details_main.dart';
 
 import '../pages/product_maintenance/supplier_details_main.dart';
 import '../pages/settings_main.dart';
@@ -143,7 +144,12 @@ class SidebarMenu extends StatelessWidget {
               ListTile(
                 title: const Text('User Details'),
                 onTap: () {
-
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                        const UserDetailsMain()),
+                  );
                 },
               ),
               ListTile(
