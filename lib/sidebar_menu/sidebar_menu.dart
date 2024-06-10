@@ -7,6 +7,8 @@ import 'package:gpos_mobile/pages/sales_report/daily_sales_main.dart';
 import 'package:gpos_mobile/pages/sales_report/sales_history_main.dart';
 import 'package:gpos_mobile/pages/user_maintenance/user_details_main.dart';
 
+import '../authentication/login.dart';
+import '../database/database_helper.dart';
 import '../pages/product_maintenance/supplier_details_main.dart';
 import '../pages/settings_main.dart';
 
@@ -175,6 +177,31 @@ class SidebarMenu extends StatelessWidget {
               );
             },
           ),
+
+          const SizedBox(height: 15),
+
+          const Divider(),
+
+          const SizedBox(height: 10),
+
+          ListTile(
+            title: const Text(
+              'Logout',
+              style: TextStyle(fontSize: 14, letterSpacing: 2),
+            ),
+            onTap: () async {
+
+              await SQLHelper.updateLoggedOutUserData();
+
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                    builder: (context) =>
+                    const Login()),
+              );
+            },
+          ),
+
         ],
       ),
     );

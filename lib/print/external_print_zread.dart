@@ -43,6 +43,7 @@ class _ExternalPrintZReadState extends State<ExternalPrintZRead> {
   String tips = 'No device connected';
 
   List<Map<String, dynamic>> _companyDetailsData = [];
+  List<Map<String, dynamic>> _loggedUserDetailsData = [];
   List<Map<String, dynamic>> _zReadData = [];
   bool _isLoading = true;
 
@@ -61,6 +62,7 @@ class _ExternalPrintZReadState extends State<ExternalPrintZRead> {
     WidgetsBinding.instance.addPostFrameCallback((_) => initBluetooth());
     _refreshZReadData();
     _refreshCompanyDetailsData();
+    _refreshLoggedUserDetailsData();
     grossSales = widget.grossSales;
     totalDiscount = widget.totalDiscount;
     totalSales = widget.totalSales;
@@ -75,6 +77,14 @@ class _ExternalPrintZReadState extends State<ExternalPrintZRead> {
     final data = await SQLHelper.getCompanyDetailsData();
     setState(() {
       _companyDetailsData = data;
+      _isLoading = false;
+    });
+  }
+
+  void _refreshLoggedUserDetailsData() async {
+    final data = await SQLHelper.getLoggedUserData();
+    setState(() {
+      _loggedUserDetailsData = data;
       _isLoading = false;
     });
   }
@@ -221,23 +231,16 @@ class _ExternalPrintZReadState extends State<ExternalPrintZRead> {
                                 Map<String, dynamic> config = Map();
                                 List<LineText> list = [];
 
-                                Map<String, dynamic> companyData =
-                                    _companyDetailsData.first;
-                                String companyName =
-                                    companyData['company_name'].toString();
-                                String companyAddress =
-                                    companyData['company_address'].toString();
-                                String companyEmail =
-                                    companyData['company_email'].toString();
-                                String companyMobileNumber =
-                                    companyData['company_mobile_number']
-                                        .toString();
-                                String staffFirstName =
-                                    companyData['first_name'].toString();
-                                String staffLastName =
-                                    companyData['last_name'].toString();
-                                String staffFullName =
-                                    "$staffFirstName $staffLastName";
+                                Map<String, dynamic> companyData = _companyDetailsData.first;
+                                String companyName = companyData['company_name'].toString();
+                                String companyAddress = companyData['company_address'].toString();
+                                String companyEmail = companyData['company_email'].toString();
+                                String companyMobileNumber = companyData['company_mobile_number'].toString();
+
+                                Map<String, dynamic> loggedUserData = _loggedUserDetailsData.first;
+                                String staffFirstName = loggedUserData['first_name'].toString();
+                                String staffLastName = loggedUserData['last_name'].toString();
+                                String staffFullName = "$staffFirstName $staffLastName";
 
                                 list.add(LineText(
                                     type: LineText.TYPE_TEXT,

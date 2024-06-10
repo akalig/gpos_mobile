@@ -22,6 +22,7 @@ class _LoginState extends State<Login> {
 
     final user = await SQLHelper.queryUserAccount(username, password);
     if (user != null) {
+      await SQLHelper.updateLoggedInUserData(username);
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const DashboardMain()),
@@ -33,6 +34,22 @@ class _LoginState extends State<Login> {
       );
     }
   }
+
+  @override
+  void initState() {
+    super.initState();
+    _checkLoggedInStatus();
+  }
+
+  void _checkLoggedInStatus() async {
+    List<Map<String, dynamic>> loggedInUsers = await SQLHelper.getLoggedUserData();
+    if (loggedInUsers.isNotEmpty) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const DashboardMain()),
+      );
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {

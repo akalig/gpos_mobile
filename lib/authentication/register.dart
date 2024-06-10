@@ -39,8 +39,7 @@ class _RegisterState extends State<Register> {
         firstNameController.text == '' ||
         lastNameController.text == '' ||
         userNameController.text == '' ||
-        passwordController.text == '' ||
-        userTypeController.text == '') {
+        passwordController.text == '') {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content:
@@ -61,18 +60,20 @@ class _RegisterState extends State<Register> {
       return;
     }
 
-    await SQLHelper.createUserAccount(
+    await SQLHelper.createCompanyDetails(
         companyNameController.text,
         companyAddressController.text,
         companyMobileNumberController.text,
-        companyEmailController.text,
+        companyEmailController.text);
+
+    await SQLHelper.createUserAccount(
         firstNameController.text,
         middleNameController.text,
         lastNameController.text,
         middleNameController.text,
         userNameController.text,
         passwordController.text,
-        userTypeController.text);
+        'admin');
 
     await SQLHelper.createDefaultFooter(
         defaultReceiptFooterLineOne, defaultReceiptFooterLineTwo);
@@ -211,12 +212,12 @@ class _RegisterState extends State<Register> {
                   fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
-            AuthenticationTextField(
-              controller: userTypeController,
-              hintText: 'User Type',
-              obscureText: false,
-            ),
-            const SizedBox(height: 10),
+            // AuthenticationTextField(
+            //   controller: userTypeController,
+            //   hintText: 'User Type',
+            //   obscureText: false,
+            // ),
+            // const SizedBox(height: 10),
             AuthenticationTextField(
               controller: userNameController,
               hintText: 'Username',

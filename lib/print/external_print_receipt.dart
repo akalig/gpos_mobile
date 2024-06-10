@@ -25,12 +25,21 @@ class _ExternalPrintReceiptState extends State<ExternalPrintReceipt> {
   List<Map<String, dynamic>> _onTransaction = [];
   List<Map<String, dynamic>> _receiptFooter = [];
   List<Map<String, dynamic>> _companyDetailsData = [];
+  List<Map<String, dynamic>> _loggedUserDetailsData = [];
   bool _isLoading = true;
 
   void _refreshCompanyDetailsData() async {
     final data = await SQLHelper.getCompanyDetailsData();
     setState(() {
       _companyDetailsData = data;
+      _isLoading = false;
+    });
+  }
+
+  void _refreshLoggedUserDetailsData() async {
+    final data = await SQLHelper.getLoggedUserData();
+    setState(() {
+      _loggedUserDetailsData = data;
       _isLoading = false;
     });
   }
@@ -58,6 +67,7 @@ class _ExternalPrintReceiptState extends State<ExternalPrintReceipt> {
     _refreshOnTransaction();
     _refreshReceiptFooter();
     _refreshCompanyDetailsData();
+    _refreshLoggedUserDetailsData();
   }
 
   /// * TRUNCATE ON TRANSACTION CLASS **
@@ -193,8 +203,10 @@ class _ExternalPrintReceiptState extends State<ExternalPrintReceipt> {
                           String companyAddress = companyData['company_address'].toString();
                           String companyEmail = companyData['company_email'].toString();
                           String companyMobileNumber = companyData['company_mobile_number'].toString();
-                          String staffFirstName = companyData['first_name'].toString();
-                          String staffLastName = companyData['last_name'].toString();
+
+                          Map<String, dynamic> loggedUserData = _loggedUserDetailsData.first;
+                          String staffFirstName = loggedUserData['first_name'].toString();
+                          String staffLastName = loggedUserData['last_name'].toString();
                           String staffFullName = "$staffFirstName $staffLastName";
 
                           Map<String, dynamic> receiptFooter = _receiptFooter.first;

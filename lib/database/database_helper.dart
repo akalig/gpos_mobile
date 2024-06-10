@@ -11,10 +11,6 @@ class SQLHelper {
   static Future<void> createUserAccountTable(sql.Database database) async {
     await database.execute("""CREATE TABLE users(
       id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-      company_name TEXT,
-      company_address TEXT,
-      company_mobile_number TEXT,
-      company_email TEXT,
       first_name TEXT,
       middle_name TEXT,
       last_name TEXT,
@@ -23,6 +19,19 @@ class SQLHelper {
       username TEXT,
       password TEXT,
       user_type TEXT,
+      is_logged_in INTEGER,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )""");
+    print("...creating a product types table");
+  }
+
+  /// * Create Company Table *
+  static Future<void> createCompanyDetailsTable(sql.Database database) async {
+    await database.execute("""CREATE TABLE company(
+      company_name TEXT,
+      company_address TEXT,
+      company_mobile_number TEXT,
+      company_email TEXT,
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
       )""");
     print("...creating a product types table");
@@ -145,6 +154,7 @@ class SQLHelper {
         await createSalesDetailsTable(database);
         await createSalesHeadersTable(database);
         await createUserAccountTable(database);
+        await createCompanyDetailsTable(database);
         await createReceiptFooterTable(database);
       },
     );
@@ -182,22 +192,15 @@ class SQLHelper {
   }
 
   /** --------------------------------------------------------------------------------------- **/
-  /** -------------------------------USER ACCOUNT TYPES QUERIES------------------------------ **/
+  /** -------------------------------COMPANY QUERIES----------------------------------------- **/
   /** --------------------------------------------------------------------------------------- **/
 
   /// * Create Product Types *
-  static Future<int> createUserAccount(
+  static Future<int> createCompanyDetails(
       String companyName,
       String companyAddress,
       String companyMobileNumber,
-      String companyEmail,
-      String firstName,
-      String middleName,
-      String lastName,
-      String suffixName,
-      String username,
-      String password,
-      String userType) async {
+      String companyEmail) async {
     final db = await SQLHelper.db();
 
     final data = {
@@ -205,28 +208,10 @@ class SQLHelper {
       'company_address': companyAddress,
       'company_mobile_number': companyMobileNumber,
       'company_email': companyEmail,
-      'first_name': firstName,
-      'middle_name': middleName,
-      'last_name': lastName,
-      'suffix_name': suffixName,
-      'username': username,
-      'password': password,
-      'user_type': userType,
     };
-    final id = await db.insert('users', data,
+    final id = await db.insert('company', data,
         conflictAlgorithm: sql.ConflictAlgorithm.replace);
     return id;
-  }
-
-  static Future<Map<String, dynamic>?> queryUserAccount(
-      String username, String password) async {
-    final db = await SQLHelper.db();
-    final List<Map<String, dynamic>> result = await db.query(
-      'users',
-      where: 'username = ? AND password = ?',
-      whereArgs: [username, password],
-    );
-    return result.isNotEmpty ? result.first : null;
   }
 
   /// * Update Company Details *
@@ -244,13 +229,135 @@ class SQLHelper {
       'company_email': companyEmail
     };
 
-    final result = await db.update('users', data);
+    final result = await db.update('company', data);
     return result;
   }
 
   static Future<List<Map<String, dynamic>>> getCompanyDetailsData() async {
     final db = await SQLHelper.db();
+    return db.query('company');
+  }
+
+  /** --------------------------------------------------------------------------------------- **/
+  /** -------------------------------USER ACCOUNT QUERIES------------------------------------ **/
+  /** --------------------------------------------------------------------------------------- **/
+
+  /// * Create Product Types *
+  static Future<int> createUserAccount(
+      String firstName,
+      String middleName,
+      String lastName,
+      String suffixName,
+      String username,
+      String password,
+      String userType) async {
+    final db = await SQLHelper.db();
+
+    final data = {
+      'first_name': firstName,
+      'middle_name': middleName,
+      'last_name': lastName,
+      'suffix_name': suffixName,
+      'username': username,
+      'password': password,
+      'user_type': userType,
+      'is_logged_in': 0,
+    };
+    final id = await db.insert('users', data,
+        conflictAlgorithm: sql.ConflictAlgorithm.replace);
+    return id;
+  }
+
+  static Future<Map<String, dynamic>?> queryUserAccount(
+      String username, String password) async {
+    final db = await SQLHelper.db();
+    final List<Map<String, dynamic>> result = await db.query(
+      'users',
+      where: 'username = ? AND password = ?',
+      whereArgs: [username, password],
+    );
+    return result.isNotEmpty ? result.first : null;
+  }
+
+  static Future<List<Map<String, dynamic>>> getUsersData() async {
+    final db = await SQLHelper.db();
     return db.query('users');
+  }
+
+  static Future<List<Map<String, dynamic>>> getLoggedUserData() async {
+    final db = await SQLHelper.db();
+    return db.query('users', where: "is_logged_in = 1");
+  }
+
+  /// * Update Logged In User *
+  static Future<int> updateLoggedInUserData(String username) async {
+    final db = await SQLHelper.db();
+
+    final data = {
+      'is_logged_in': 1
+    };
+
+    final result = await db
+        .update('users', data, where: "username = ?", whereArgs: [username]);
+    return result;
+  }
+
+  /// * Update Logged Out User *
+  static Future<int> updateLoggedOutUserData() async {
+    final db = await SQLHelper.db();
+
+    final data = {
+      'is_logged_in': 0
+    };
+
+    final result = await db
+        .update('users', data);
+    return result;
+  }
+
+  /// * Get Single User *
+  static Future<List<Map<String, dynamic>>> getSingleUser(int id) async {
+    final db = await SQLHelper.db();
+    return db.query('users',
+        where: "id = ?", whereArgs: [id], limit: 1);
+  }
+
+  /// * Update User *
+  static Future<int> updateUser(
+      int id,
+      String firstName,
+      String middleName,
+      String lastName,
+      String suffixName,
+      String username,
+      String password,
+      String userType) async {
+    final db = await SQLHelper.db();
+
+    final data = {
+      'first_name': firstName,
+      'middle_name': middleName,
+      'last_name': lastName,
+      'suffix_name': suffixName,
+      'username': username,
+      'password': password,
+      'user_type': userType,
+    };
+
+    final result = await db
+        .update('users', data, where: "id = ?", whereArgs: [id]);
+    return result;
+  }
+
+  /// * Delete User *
+  static Future<void> deleteUser(int id) async {
+    final db = await SQLHelper.db();
+
+    try {
+      await db.delete("users", where: "id = ?", whereArgs: [id]);
+    } catch (err) {
+      debugPrint("Something went wrong when deleting the User: $err");
+    }
   }
 
   /** --------------------------------------------------------------------------------------- **/
