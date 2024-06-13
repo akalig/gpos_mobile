@@ -16,6 +16,7 @@ class MobilePOSCheckout extends StatefulWidget {
 
 class _MobilePOSCheckoutState extends State<MobilePOSCheckout> {
   List<Map<String, dynamic>> _onTransaction = [];
+  List<Map<String, dynamic>> _loggedUserDetailsData = [];
   bool _isLoading = true;
   late TextEditingController _editDiscountController;
   late TextEditingController _editQuantityController;
@@ -35,6 +36,14 @@ class _MobilePOSCheckoutState extends State<MobilePOSCheckout> {
     });
   }
 
+  void _refreshLoggedUserDetailsData() async {
+    final data = await SQLHelper.getLoggedUserData();
+    setState(() {
+      _loggedUserDetailsData = data;
+      _isLoading = false;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -42,6 +51,7 @@ class _MobilePOSCheckoutState extends State<MobilePOSCheckout> {
     _editQuantityController = TextEditingController();
     _amountPaidController = TextEditingController();
     _refreshOnTransaction();
+    _refreshLoggedUserDetailsData();
   }
 
   /// * ADD EDIT DISCOUNT CLASS **
@@ -62,9 +72,9 @@ class _MobilePOSCheckoutState extends State<MobilePOSCheckout> {
 
   /// * ADD SALES HEADERS CLASS **
   Future<void> _addSalesHeaders(double subtotal, double totalDiscount,
-      double total, String amountPaid) async {
+      double total, String amountPaid, String staffName, int staffID) async {
     await SQLHelper.createSalesHeaders(
-        subtotal, totalDiscount, total, amountPaid);
+        subtotal, totalDiscount, total, amountPaid, staffName, staffID);
   }
 
   /// * ADD SALES DETAILS CLASS **
@@ -312,12 +322,18 @@ class _MobilePOSCheckoutState extends State<MobilePOSCheckout> {
                                   // Add a delay if needed
                                   Future.delayed(const Duration(seconds: 2));
 
+                                  Map<String, dynamic> loggedUserData = _loggedUserDetailsData.first;
+                                  String staffFirstName = loggedUserData['first_name'].toString();
+                                  String staffLastName = loggedUserData['last_name'].toString();
+                                  int staffID = loggedUserData['id'];
+                                  String staffFullName = "$staffFirstName $staffLastName";
+
                                   // Add sales headers
                                   _addSalesHeaders(
                                       calculateSubtotal(),
                                       calculateTotalDiscount(),
                                       total,
-                                      amountPaid.toString());
+                                      amountPaid.toString(), staffFullName, staffID);
 
                                   // Add a delay if needed
                                   Future.delayed(const Duration(seconds: 2));

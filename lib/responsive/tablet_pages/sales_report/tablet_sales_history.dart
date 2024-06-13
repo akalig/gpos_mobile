@@ -17,7 +17,6 @@ class _TabletSalesHistoryState extends State<TabletSalesHistory> {
   bool _isLoading = true;
   DateTime? _startDate;
   DateTime? _endDate;
-
   List<Map<String, dynamic>> _filteredSalesHeaders = [];
 
   void _filterSalesHeaders() {
@@ -119,79 +118,98 @@ class _TabletSalesHistoryState extends State<TabletSalesHistory> {
         children: [
           Padding(
             padding: EdgeInsets.only(left: _isDrawerOpen ? 200 : 0),
-            child: Row(
+            child: Column(
               children: [
-                // First column
-                Expanded(
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.vertical,
-                    child: Column(
-                      children: [
-                        // youtube video
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: AspectRatio(
-                            aspectRatio: 120 / 9,
-                            child: Container(
-                              color: Colors.deepPurple[200],
+                Row(
+                  children: [
+                    // First column
+                    Expanded(
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.vertical,
+                        child: Column(
+                          children: [
+                            // youtube video
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: AspectRatio(
+                                aspectRatio: 120 / 9,
+                                child: Container(
+                                  color: Colors.deepPurple[200],
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
 
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: DataTable(
-                            columnSpacing: 50,
-                            columns: const [
-                              DataColumn(label: Text('Transaction Code')),
-                              DataColumn(label: Text('Subtotal')),
-                              DataColumn(label: Text('Discount')),
-                              DataColumn(label: Text('Total')),
-                              DataColumn(label: Text('Date and Time')),
-                            ],
-                            // Remove empty rows and then map the transactions to rows in the DataTable
-                            rows: _salesHeaders
-                                .where((transaction) {
-                                  var timestamp = transaction['created_at'];
-                                  var date =
+                            SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: SingleChildScrollView(
+                                  scrollDirection: Axis.vertical,
+                                  child: DataTable(
+                                    columnSpacing: 50,
+                                    columns: const [
+                                      DataColumn(label: Text('Transaction Code')),
+                                      DataColumn(label: Text('Subtotal')),
+                                      DataColumn(label: Text('Discount')),
+                                      DataColumn(label: Text('Total')),
+                                      DataColumn(label: Text('Date and Time')),
+                                    ],
+                                    // Remove empty rows and then map the transactions to rows in the DataTable
+                                    rows: _salesHeaders
+                                        .where((transaction) {
+                                      String dateString =
+                                      transaction['created_at'];
+                                      DateTime dateTime = DateTime.parse(
+                                          dateString); // Parse the date string
+                                      var timestamp =
+                                          dateTime.millisecondsSinceEpoch;
+                                      var date =
                                       DateTime.fromMillisecondsSinceEpoch(
                                           timestamp);
-                                  return (_startDate == null ||
+
+                                      return (_startDate == null ||
                                           date.isAfter(_startDate!)) &&
-                                      (_endDate == null ||
-                                          date.isBefore(_endDate!
-                                              .add(Duration(days: 1))));
-                                })
-                                .map((transaction) => DataRow(cells: [
+                                          (_endDate == null ||
+                                              date.isBefore(_endDate!
+                                                  .add(Duration(days: 1))));
+                                    })
+                                        .map((transaction) => DataRow(cells: [
                                       DataCell(Text(
                                           transaction['transaction_code']
                                               .toString())),
                                       DataCell(Text(
-                                          transaction['subtotal'].toString())),
+                                          transaction['subtotal']
+                                              .toString())),
                                       DataCell(Text(
                                           transaction['total_discount']
                                               .toString())),
-                                      DataCell(Text(
-                                          transaction['total'].toString())),
+                                      DataCell(Text(transaction['total']
+                                          .toString())),
                                       DataCell(Text(formatTimestamp(
-                                          transaction['created_at']))),
+                                          DateTime.parse(transaction[
+                                          'created_at'])
+                                              .millisecondsSinceEpoch))),
                                     ]))
-                                .toList(),
-                          ),
+                                        .toList(),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
-                  ),
-                ),
 
-                // second column
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Container(
-                    width: 50,
-                    color: Colors.deepPurple[300],
-                  ),
-                )
+                    // second column
+                    // Padding(
+                    //   padding: const EdgeInsets.all(8.0),
+                    //   child: Container(
+                    //     width: 50,
+                    //     color: Colors.deepPurple[300],
+                    //   ),
+                    // )
+                  ],
+                ),
               ],
             ),
           ),

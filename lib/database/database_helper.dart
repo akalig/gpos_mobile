@@ -133,13 +133,26 @@ class SQLHelper {
     print("...creating a Sales headers table");
   }
 
+  /// * Create User Transaction Table *
+  static Future<void> createUserTransactionTable(sql.Database database) async {
+    await database.execute("""CREATE TABLE user_transaction(
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    staff_name TEXT,
+    staff_id INTEGER,
+    transaction_code INTEGER,
+    status TEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )""");
+    print("...creating a user transaction table");
+  }
+
   /// * Create Receipt Footer Table *
   static Future<void> createReceiptFooterTable(sql.Database database) async {
     await database.execute("""CREATE TABLE receipt_footer(
       line_one TEXT,
       line_two TEXT
       )""");
-    print("...creating a product types table");
+    print("...creating a receipt footer table");
   }
 
   static Future<sql.Database> db() async {
@@ -155,6 +168,7 @@ class SQLHelper {
         await createSalesHeadersTable(database);
         await createUserAccountTable(database);
         await createCompanyDetailsTable(database);
+        await createUserTransactionTable(database);
         await createReceiptFooterTable(database);
       },
     );
@@ -739,7 +753,7 @@ class SQLHelper {
 
   /// * Create Sales Headers *
   static Future<void> createSalesHeaders(double subtotal, double totalDiscount,
-      double total, String stAmountPaid) async {
+      double total, String stAmountPaid, String staffName, int staffID) async {
     final db = await SQLHelper.db();
 
     double amountPaid = double.parse(stAmountPaid);
@@ -767,11 +781,24 @@ class SQLHelper {
       'amount_paid': amountPaid,
       'change': change,
       'status': 'done',
-      'created_at': createdAt, // Store createdAt as a formatted date string
+      'created_at': createdAt,
     };
 
     await db.insert('sales_headers', data,
         conflictAlgorithm: sql.ConflictAlgorithm.replace);
+
+    final userTransactionData = {
+      'staff_name': staffName,
+      'staff_id': staffID,
+      'transaction_code': nextTransactionCode,
+      'total': total,
+      'status': 'done',
+      'created_at': createdAt,
+    };
+
+    await db.insert('user_transaction', userTransactionData,
+        conflictAlgorithm: sql.ConflictAlgorithm.replace);
+
   }
 
   /// * Get Sales Headers Count *

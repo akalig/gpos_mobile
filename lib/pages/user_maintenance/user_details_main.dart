@@ -7,10 +7,10 @@ class UserDetailsMain extends StatefulWidget {
   const UserDetailsMain({super.key});
 
   @override
-  State<UserDetailsMain> createState() => _ProductTypesState();
+  State<UserDetailsMain> createState() => _UserDetailsState();
 }
 
-class _ProductTypesState extends State<UserDetailsMain> {
+class _UserDetailsState extends State<UserDetailsMain> {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(

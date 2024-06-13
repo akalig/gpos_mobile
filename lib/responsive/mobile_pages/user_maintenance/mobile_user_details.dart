@@ -20,6 +20,7 @@ class _MobileUserDetailsState extends State<MobileUserDetails> {
   late TextEditingController passwordController;
   late TextEditingController userTypeController;
   late TextEditingController confirmPasswordController;
+  String userType = '';
 
   void _refreshUserList() async {
     final data = await SQLHelper.getUsersData();
@@ -47,12 +48,13 @@ class _MobileUserDetailsState extends State<MobileUserDetails> {
   void addUserDialog(BuildContext context, int? id) async {
     if (id != null) {
       final existingUser =
-          _userList.firstWhere((element) => element['id'] == id);
-      firstNameController.text = existingUser['first_name'];
-      middleNameController.text = existingUser['middle_name'];
-      lastNameController.text = existingUser['last_name'];
-      suffixNameController.text = existingUser['suffix_name'];
-      userNameController.text = existingUser['username'];
+        _userList.firstWhere((element) => element['id'] == id);
+        firstNameController.text = existingUser['first_name'];
+        middleNameController.text = existingUser['middle_name'];
+        lastNameController.text = existingUser['last_name'];
+        suffixNameController.text = existingUser['suffix_name'];
+        userNameController.text = existingUser['username'];
+        userType = existingUser['user_type'];
     }
 
     showDialog(
@@ -85,6 +87,35 @@ class _MobileUserDetailsState extends State<MobileUserDetails> {
                   decoration: const InputDecoration(hintText: 'Suffix Name'),
                 ),
                 const SizedBox(height: 20),
+
+                DropdownButtonFormField<String>(
+                  value: userType.isNotEmpty
+                      ? userType
+                      : null,
+                  hint: const Text('User Type'),
+                  items: const [
+                    DropdownMenuItem<String>(
+                      value: 'admin',
+                      child: Text('Admin'),
+                    ),
+                    DropdownMenuItem<String>(
+                      value: 'manager',
+                      child: Text('Manager'),
+                    ),
+                    DropdownMenuItem<String>(
+                      value: 'cashier',
+                      child: Text('Cashier'),
+                    ),
+                  ],
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      userType = newValue ?? '';
+                    });
+                  },
+                ),
+
+                const SizedBox(height: 20),
+
                 TextField(
                   controller: userNameController,
                   decoration: const InputDecoration(hintText: 'Username'),
@@ -129,6 +160,15 @@ class _MobileUserDetailsState extends State<MobileUserDetails> {
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
+
+                firstNameController.text = '';
+                middleNameController.text = '';
+                lastNameController.text = '';
+                suffixNameController.text = '';
+                userNameController.text = '';
+                passwordController.text = '';
+                confirmPasswordController.text = '';
+                userTypeController.text = '';
               },
               child: const Text('Cancel'),
             ),
@@ -147,7 +187,7 @@ class _MobileUserDetailsState extends State<MobileUserDetails> {
         suffixNameController.text,
         userNameController.text,
         passwordController.text,
-        'admin');
+        userType);
 
     _refreshUserList();
   }

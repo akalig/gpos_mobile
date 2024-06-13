@@ -20,6 +20,7 @@ class _TabletPOSState extends State<TabletPOS> {
   List<Map<String, dynamic>> _productsDetails = [];
   List<Map<String, dynamic>> _onTransaction = [];
   List<Map<String, dynamic>> _salesHeaders = [];
+  List<Map<String, dynamic>> _loggedUserDetailsData = [];
   late TextEditingController _editDiscountController;
   late TextEditingController _editQuantityController;
   late TextEditingController _amountPaidController;
@@ -36,6 +37,14 @@ class _TabletPOSState extends State<TabletPOS> {
     final data = await SQLHelper.getProductsDetails();
     setState(() {
       _productsDetails = data;
+      _isLoading = false;
+    });
+  }
+
+  void _refreshLoggedUserDetailsData() async {
+    final data = await SQLHelper.getLoggedUserData();
+    setState(() {
+      _loggedUserDetailsData = data;
       _isLoading = false;
     });
   }
@@ -69,6 +78,7 @@ class _TabletPOSState extends State<TabletPOS> {
     _refreshProductsDetails();
     _refreshOnTransaction();
     _refreshSalesHeaders();
+    _refreshLoggedUserDetailsData();
   }
 
   /// * ADD ON TRANSACTION CLASS **
@@ -100,9 +110,9 @@ class _TabletPOSState extends State<TabletPOS> {
 
   /// * ADD SALES HEADERS CLASS **
   Future<void> _addSalesHeaders(double subtotal, double totalDiscount,
-      double total, String amountPaid) async {
+      double total, String amountPaid, String staffName, int staffID) async {
     await SQLHelper.createSalesHeaders(
-        subtotal, totalDiscount, total, amountPaid);
+        subtotal, totalDiscount, total, amountPaid, staffName, staffID);
   }
 
   /// * ADD SALES DETAILS CLASS **
@@ -679,12 +689,18 @@ class _TabletPOSState extends State<TabletPOS> {
                                                   // Add a delay if needed
                                                   Future.delayed(const Duration(seconds: 2));
 
+                                                  Map<String, dynamic> loggedUserData = _loggedUserDetailsData.first;
+                                                  String staffFirstName = loggedUserData['first_name'].toString();
+                                                  String staffLastName = loggedUserData['last_name'].toString();
+                                                  int staffID = loggedUserData['id'];
+                                                  String staffFullName = "$staffFirstName $staffLastName";
+
                                                   // Add sales headers
                                                   _addSalesHeaders(
                                                       calculateSubtotal(),
                                                       calculateTotalDiscount(),
                                                       total,
-                                                      amountPaid.toString());
+                                                      amountPaid.toString(), staffFullName, staffID);
 
                                                   // Add a delay if needed
                                                   Future.delayed(const Duration(seconds: 2));
