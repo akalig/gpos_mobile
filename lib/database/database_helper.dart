@@ -791,7 +791,6 @@ class SQLHelper {
       'staff_name': staffName,
       'staff_id': staffID,
       'transaction_code': nextTransactionCode,
-      'total': total,
       'status': 'done',
       'created_at': createdAt,
     };
@@ -811,6 +810,12 @@ class SQLHelper {
   static Future<List<Map<String, dynamic>>> getSalesHeaders() async {
     final db = await SQLHelper.db();
     return db.query('sales_headers', orderBy: "id");
+  }
+
+  /// * Get User Transaction *
+  static Future<List<Map<String, dynamic>>> getUserTransaction() async {
+    final db = await SQLHelper.db();
+    return db.query('user_transaction', orderBy: "id");
   }
 
   /// * Get Daily Sales Headers *

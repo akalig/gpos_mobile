@@ -231,16 +231,26 @@ class _ExternalPrintZReadState extends State<ExternalPrintZRead> {
                                 Map<String, dynamic> config = Map();
                                 List<LineText> list = [];
 
-                                Map<String, dynamic> companyData = _companyDetailsData.first;
-                                String companyName = companyData['company_name'].toString();
-                                String companyAddress = companyData['company_address'].toString();
-                                String companyEmail = companyData['company_email'].toString();
-                                String companyMobileNumber = companyData['company_mobile_number'].toString();
+                                Map<String, dynamic> companyData =
+                                    _companyDetailsData.first;
+                                String companyName =
+                                    companyData['company_name'].toString();
+                                String companyAddress =
+                                    companyData['company_address'].toString();
+                                String companyEmail =
+                                    companyData['company_email'].toString();
+                                String companyMobileNumber =
+                                    companyData['company_mobile_number']
+                                        .toString();
 
-                                Map<String, dynamic> loggedUserData = _loggedUserDetailsData.first;
-                                String staffFirstName = loggedUserData['first_name'].toString();
-                                String staffLastName = loggedUserData['last_name'].toString();
-                                String staffFullName = "$staffFirstName $staffLastName";
+                                Map<String, dynamic> loggedUserData =
+                                    _loggedUserDetailsData.first;
+                                String staffFirstName =
+                                    loggedUserData['first_name'].toString();
+                                String staffLastName =
+                                    loggedUserData['last_name'].toString();
+                                String staffFullName =
+                                    "$staffFirstName $staffLastName";
 
                                 list.add(LineText(
                                     type: LineText.TYPE_TEXT,
@@ -320,56 +330,52 @@ class _ExternalPrintZReadState extends State<ExternalPrintZRead> {
 
                                 list.add(LineText(linefeed: 1));
 
+                                // Helper function to format a line with text and value
+                                String formatLineWithTextAndValues(
+                                    String text, String value) {
+                                  // Ensure the text is truncated if it's too long
+                                  if (text.length > 20) {
+                                    text = text.substring(0, 20);
+                                  }
+
+                                  // Pad the text to be 20 characters long
+                                  text = text.padRight(20);
+
+                                  // Pad the value to be 12 characters long, aligned to the right
+                                  value = value.padLeft(12);
+
+                                  // Return the formatted line
+                                  return '$text$value';
+                                }
+
+                                // Example usage for various lines
                                 list.add(LineText(
                                   type: LineText.TYPE_TEXT,
-                                  content: "Gross Sales Amount:",
+                                  content: formatLineWithTextAndValues(
+                                      "Gross Sales Amount:", grossSales),
                                   align: LineText.ALIGN_LEFT,
                                   weight: 1,
                                   relativeX: 0,
-                                  linefeed: 0,
-                                ));
-
-                                list.add(LineText(
-                                  type: LineText.TYPE_TEXT,
-                                  content: grossSales,
-                                  align: LineText.ALIGN_LEFT,
-                                  weight: 1,
-                                  relativeX: 285,
                                   linefeed: 1,
                                 ));
 
                                 list.add(LineText(
                                   type: LineText.TYPE_TEXT,
-                                  content: "Total Discount Amount:",
+                                  content: formatLineWithTextAndValues(
+                                      "Total Discount Amount:", totalDiscount),
                                   align: LineText.ALIGN_LEFT,
                                   weight: 1,
                                   relativeX: 0,
-                                  linefeed: 0,
-                                ));
-
-                                list.add(LineText(
-                                  type: LineText.TYPE_TEXT,
-                                  content: totalDiscount,
-                                  align: LineText.ALIGN_LEFT,
-                                  relativeX: 285,
                                   linefeed: 1,
                                 ));
 
                                 list.add(LineText(
                                   type: LineText.TYPE_TEXT,
-                                  content: "Total Sales Amount:",
+                                  content: formatLineWithTextAndValues(
+                                      "Total Sales Amount:", totalSales),
                                   align: LineText.ALIGN_LEFT,
                                   weight: 1,
                                   relativeX: 0,
-                                  linefeed: 0,
-                                ));
-
-                                list.add(LineText(
-                                  type: LineText.TYPE_TEXT,
-                                  content: totalSales,
-                                  align: LineText.ALIGN_LEFT,
-                                  weight: 1,
-                                  relativeX: 285,
                                   linefeed: 1,
                                 ));
 
@@ -377,73 +383,41 @@ class _ExternalPrintZReadState extends State<ExternalPrintZRead> {
 
                                 list.add(LineText(
                                   type: LineText.TYPE_TEXT,
-                                  content: "Total Transaction:",
+                                  content: formatLineWithTextAndValues(
+                                      "Total Transaction:", totalTransaction),
                                   align: LineText.ALIGN_LEFT,
                                   weight: 1,
                                   relativeX: 0,
-                                  linefeed: 0,
-                                ));
-
-                                list.add(LineText(
-                                  type: LineText.TYPE_TEXT,
-                                  content: totalTransaction,
-                                  align: LineText.ALIGN_LEFT,
-                                  weight: 1,
-                                  relativeX: 285,
                                   linefeed: 1,
                                 ));
 
                                 list.add(LineText(
                                   type: LineText.TYPE_TEXT,
-                                  content: "Total Discount:",
+                                  content: formatLineWithTextAndValues(
+                                      "Total Discount:", countDiscount),
                                   align: LineText.ALIGN_LEFT,
                                   weight: 1,
                                   relativeX: 0,
-                                  linefeed: 0,
-                                ));
-
-                                list.add(LineText(
-                                  type: LineText.TYPE_TEXT,
-                                  content: countDiscount,
-                                  align: LineText.ALIGN_LEFT,
-                                  weight: 1,
-                                  relativeX: 285,
                                   linefeed: 1,
                                 ));
 
                                 list.add(LineText(
                                   type: LineText.TYPE_TEXT,
-                                  content: "Total Void:",
+                                  content: formatLineWithTextAndValues(
+                                      "Total Void:", countVoid),
                                   align: LineText.ALIGN_LEFT,
                                   weight: 1,
                                   relativeX: 0,
-                                  linefeed: 0,
-                                ));
-
-                                list.add(LineText(
-                                  type: LineText.TYPE_TEXT,
-                                  content: countVoid,
-                                  align: LineText.ALIGN_LEFT,
-                                  weight: 1,
-                                  relativeX: 285,
                                   linefeed: 1,
                                 ));
 
                                 list.add(LineText(
                                   type: LineText.TYPE_TEXT,
-                                  content: "Total Void Amount:",
+                                  content: formatLineWithTextAndValues(
+                                      "Total Void Amount:", totalVoid),
                                   align: LineText.ALIGN_LEFT,
                                   weight: 1,
                                   relativeX: 0,
-                                  linefeed: 0,
-                                ));
-
-                                list.add(LineText(
-                                  type: LineText.TYPE_TEXT,
-                                  content: totalVoid,
-                                  align: LineText.ALIGN_LEFT,
-                                  weight: 1,
-                                  relativeX: 285,
                                   linefeed: 1,
                                 ));
 

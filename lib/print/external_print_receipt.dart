@@ -237,135 +237,95 @@ class _ExternalPrintReceiptState extends State<ExternalPrintReceipt> {
 
                           list.add(LineText(type: LineText.TYPE_TEXT, content: '--------------------------------', weight: 1, align: LineText.ALIGN_CENTER,linefeed: 1));
 
+                          String formatLineDetails(String qty, String item, String price) {
+                            // Ensure the item description is truncated if it's too long
+                            if (item.length > 17) {
+                              item = item.substring(0, 17);
+                            }
+
+                            // Pad the qty to be 6 characters long
+                            qty = qty.padRight(6);
+
+                            // Pad the item to be 17 characters long
+                            item = item.padRight(17);
+
+                            // Pad the price to be 9 characters long, aligned to the right
+                            price = price.padLeft(9);
+
+                            // Return the formatted line
+                            return '$qty$item$price';
+                          }
+
                           list.add(LineText(
                             type: LineText.TYPE_TEXT,
-                            content: "Qty",
+                            content: "Qty   Item              Price   ",
                             align: LineText.ALIGN_LEFT,
                             relativeX: 0,
-                            linefeed: 0,
-                          ));
-
-                          list.add(LineText(
-                            type: LineText.TYPE_TEXT,
-                            content: "Item",
-                            align: LineText.ALIGN_LEFT,
-                            relativeX: 50,
-                            linefeed: 0,
-                          ));
-
-                          // list.add(LineText(
-                          //   type: LineText.TYPE_TEXT,
-                          //   content: "Price",
-                          //   align: LineText.ALIGN_LEFT,
-                          //   relativeX: 210,
-                          //   linefeed: 0,
-                          // ));
-
-                          list.add(LineText(
-                            type: LineText.TYPE_TEXT,
-                            content: "Price",
-                            align: LineText.ALIGN_LEFT,
-                            relativeX: 285,
                             linefeed: 1,
                           ));
 
                           _onTransaction.forEach((transaction) {
 
+                            String qty = transaction['ordering_level'].toString();
+                            String item = transaction['description'].toString();
+                            String price = transaction['sell_price'].toStringAsFixed(2);
+
+                            // Add the formatted transaction line
                             list.add(LineText(
                               type: LineText.TYPE_TEXT,
-                              content: transaction['ordering_level'].toString(),
+                              content: formatLineDetails(qty, item, price),
                               align: LineText.ALIGN_LEFT,
                               relativeX: 0,
-                              linefeed: 0,
-                            ));
-
-                            list.add(LineText(
-                              type: LineText.TYPE_TEXT,
-                              content: transaction['description'].toString(),
-                              align: LineText.ALIGN_LEFT,
-                              relativeX: 50,
-                              linefeed: 0,
-                            ));
-
-                            list.add(LineText(
-                              type: LineText.TYPE_TEXT,
-                              content: transaction['sell_price'].toStringAsFixed(2),
-                              align: LineText.ALIGN_LEFT,
-                              relativeX: 285,
                               linefeed: 1,
                             ));
-
-                            // list.add(LineText(
-                            //   type: LineText.TYPE_TEXT,
-                            //   content: transaction['total'].toStringAsFixed(2),
-                            //   align: LineText.ALIGN_LEFT,
-                            //   relativeX: 285,
-                            //   linefeed: 1,
-                            // ));
-
                           });
-
-                          // list.add(LineText(
-                          //   type: LineText.TYPE_TEXT,
-                          //   content: "12345678901234567890123456789012",
-                          //   align: LineText.ALIGN_LEFT,
-                          //   relativeX: 0,
-                          //   linefeed: 1,
-                          // ));
 
                           list.add(LineText(type: LineText.TYPE_TEXT, content: '--------------------------------', weight: 1, align: LineText.ALIGN_CENTER,linefeed: 1));
 
+                          // Helper function to format a line with text and value
+                          String formatLineWithValues(String text, String value) {
+                            // Ensure the text is truncated if it's too long
+                            if (text.length > 20) {
+                              text = text.substring(0, 20);
+                            }
+
+                            // Pad the text to be 20 characters long
+                            text = text.padRight(20);
+
+                            // Pad the value to be 12 characters long, aligned to the right
+                            value = value.padLeft(12);
+
+                            // Return the formatted line
+                            return '$text$value';
+                          }
+
+                          // Example usage for subtotal, total discount, and total
                           list.add(LineText(
                             type: LineText.TYPE_TEXT,
-                            content: "Subtotal",
+                            content: formatLineWithValues("Subtotal", calculateSubtotal().toStringAsFixed(2)),
                             align: LineText.ALIGN_LEFT,
                             relativeX: 0,
-                            linefeed: 0,
-                          ));
-
-                          list.add(LineText(
-                            type: LineText.TYPE_TEXT,
-                            content: calculateSubtotal().toStringAsFixed(2),
-                            align: LineText.ALIGN_LEFT,
-                            relativeX: 285,
                             linefeed: 1,
                           ));
 
                           list.add(LineText(
                             type: LineText.TYPE_TEXT,
-                            content: "Total Discount",
+                            content: formatLineWithValues("Total Discount", calculateTotalDiscount().toStringAsFixed(2)),
                             align: LineText.ALIGN_LEFT,
                             relativeX: 0,
-                            linefeed: 0,
-                          ));
-
-                          list.add(LineText(
-                            type: LineText.TYPE_TEXT,
-                            content: calculateTotalDiscount().toStringAsFixed(2),
-                            align: LineText.ALIGN_LEFT,
-                            relativeX: 285,
                             linefeed: 1,
                           ));
 
                           list.add(LineText(
                             type: LineText.TYPE_TEXT,
-                            content: "Total",
+                            content: formatLineWithValues("Total", calculateTotal().toStringAsFixed(2)),
                             align: LineText.ALIGN_LEFT,
                             weight: 1,
                             fontZoom: 1,
                             relativeX: 0,
-                            linefeed: 0,
-                          ));
-
-                          list.add(LineText(
-                            type: LineText.TYPE_TEXT,
-                            content: calculateTotal().toStringAsFixed(2),
-                            align: LineText.ALIGN_LEFT,
-                            weight: 1,
-                            fontZoom: 1,
-                            relativeX: 285,
                             linefeed: 1,
                           ));
+
 
                           list.add(LineText(linefeed: 1));
 
