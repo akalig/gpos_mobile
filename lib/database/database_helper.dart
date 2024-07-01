@@ -141,7 +141,7 @@ class SQLHelper {
     staff_id INTEGER,
     transaction_code INTEGER,
     status TEXT,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP`
   )""");
     print("...creating a user transaction table");
   }
